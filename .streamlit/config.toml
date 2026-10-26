@@ -1,0 +1,14 @@
+# SpotCheck theme: Zomato-style red, white cards, light grey canvas (see design/stitch_DESIGN.md).
+[theme]
+base = "light"
+primaryColor = "#E23744"
+backgroundColor = "#F8F8F8"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#1C1C1C"
+font = "sans-serif"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false

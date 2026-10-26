@@ -1,0 +1,697 @@
+"""SpotCheck – restaurant concept check for Bangalore (Streamlit, mobile-first).
+
+A 4-step wizard (Where → Format → Menu → Price) feeds the two trained models through
+predict.py; the app adds no model logic of its own. Results, what-if comparison,
+a take-away summary and an About page follow. No login, nothing stored on a server.
+
+Run locally:  streamlit run app.py
+Design: design/stitch_DESIGN.md (Stitch export), Zomato-style red; not affiliated with Zomato.
+"""
+import datetime as dt
+import html
+
+import streamlit as st
+
+from predict import ALLOWED, CUISINE_FLAGS, RANGES, predict_price, predict_rating, validate_inputs
+
+PRICE_BAND = 136            # ± typical error of the price model: Random Forest 10-fold CV MAE ₹136.4
+STRONG, MODERATE = 0.60, 0.30   # rating verdicts, same thresholds as the workbook's 'Reference Tests' sheet
+MAX_WHATIFS = 3             # what-if cards on top of the base concept
+SLIDER_MIN, SLIDER_MAX, SLIDER_STEP = 100, 3000, 50
+
+STEPS = ["Where", "Format", "Menu", "Price"]
+POPULAR_AREAS = ["Koramangala 5th Block", "Indiranagar", "HSR", "Whitefield", "JP Nagar", "BTM",
+                 "Jayanagar", "MG Road", "Marathahalli", "Bellandur", "Other"]
+TYPE_EMOJI = {
+    "Quick Bites": "🍔", "Casual Dining": "🍽️", "Cafe": "☕", "Delivery": "🛵", "Dessert Parlor": "🍨",
+    "Bakery": "🥐", "Bar": "🍸", "Beverage Shop": "🧃", "Takeaway": "🥡", "Sweet Shop": "🍬",
+    "Food Court": "🏬", "Other": "✨",
+}
+CUISINE_EMOJI = {
+    "c_North_Indian": "🍛", "c_Chinese": "🥢", "c_South_Indian": "🥥", "c_Fast_Food": "🍟",
+    "c_Biryani": "🍚", "c_Desserts": "🍰", "c_Beverages": "🥤", "c_Continental": "🥗",
+    "c_Cafe": "☕", "c_Street_Food": "🌮", "c_Italian": "🍕", "c_Bakery": "🥐",
+}
+SERVICES = [  # (field, emoji, label, hint)
+    ("has_bar", "🍷", "Serves alcohol", "Bar, pub or lounge licence"),
+    ("online_order", "📱", "Online ordering", "Delivery apps or your own site"),
+    ("book_table", "📅", "Table booking", "Guests can reserve a table"),
+]
+SHORT = {"has_bar": "alcohol", "online_order": "online ordering", "book_table": "table booking"}  # for chips and titles
+TONES = {  # badge background, text colour
+    "green": ("#EAF7EE", "#24963F"), "amber": ("#FEF8EC", "#A86A00"),
+    "blue": ("#EFF6FF", "#2563EB"), "red": ("#FDECEE", "#C81E2C"),
+}
+KEEP_IN_MIND = [
+    "Ratings also depend on food, service and hygiene – the models can't see these.",
+    "Based on 9,244 Bangalore restaurants (Kaggle data, about 2019).",
+    "Shows patterns in existing restaurants, not cause and effect.",
+]
+FOOTER = "Estimates, not guarantees · Trained on 9,244 Bangalore restaurants · Not affiliated with Zomato"
+
+
+# ---------------------------------------------------------------- logic (no Streamlit calls)
+def rupees(x: float) -> str:
+    return f"₹{x:,.0f}"
+
+
+def cuisine_name(flag: str) -> str:
+    return flag[2:].replace("_", " ")
+
+
+def new_concept() -> dict:
+    return {"location": None, "primary_type": None, "has_bar": "No", "online_order": "Yes",
+            "book_table": "No", "cuisines": [], "n_cuisines": 1, "cost_for_two": 500}
+
+
+def to_inputs(concept: dict) -> dict:
+    """Concept (as the user entered it) → the input dict predict.py expects."""
+    inputs = {k: concept[k] for k in ("location", "primary_type", "has_bar", "online_order", "book_table",
+                                       "n_cuisines", "cost_for_two")}
+    inputs.update({c: "Yes" if c in concept["cuisines"] else "No" for c in CUISINE_FLAGS})
+    return inputs
+
+
+def price_verdict(price: float, cost: float) -> tuple[str, str, str]:
+    low, high = price - PRICE_BAND, price + PRICE_BAND
+    if cost > high:
+        return "Above market", "amber", f"Your {rupees(cost)} is above the usual top of {rupees(high)}."
+    if cost < low:
+        return "Below market", "blue", f"Your {rupees(cost)} is below the usual bottom of {rupees(low)}."
+    return "In line with market", "green", f"Your {rupees(cost)} sits within the usual range."
+
+
+def rating_verdict(prob: float) -> tuple[str, str, str]:
+    if prob >= STRONG:
+        return "Strong", "green", "Most places with this profile are rated 4.0 or higher."
+    if prob >= MODERATE:
+        return "Moderate", "amber", "A fair share of places like this reach 4.0+."
+    return "Weak", "red", "Few places with this profile reach 4.0+."
+
+
+def assess(inputs: dict) -> dict:
+    """Both model outputs plus verdicts for one set of inputs."""
+    price = predict_price(inputs)
+    prob = predict_rating(inputs)
+    cost = float(inputs["cost_for_two"])
+    return {"price": price, "low": price - PRICE_BAND, "high": price + PRICE_BAND, "prob": prob, "cost": cost,
+            "price_verdict": price_verdict(price, cost), "rating_verdict": rating_verdict(prob)}
+
+
+CONCEPT_FIELDS = ["location", "primary_type", "has_bar", "online_order", "book_table", "cuisines", "n_cuisines",
+                  "cost_for_two"]
+
+
+def describe_change(field: str, old, new) -> tuple[str, str]:
+    """(card title if this is the only change, 'what changed' text) for one setting of a what-if."""
+    if field == "cost_for_two":
+        return ("Higher price" if new > old else "Lower price"), f"💰 {rupees(old)} → {rupees(new)}"
+    if field == "location":
+        return new, f"📍 {old} → {new}"
+    if field == "primary_type":
+        return f"As a {new}", f"{TYPE_EMOJI[new]} {old} → {new}"
+    if field == "cuisines":
+        names = lambda cs: ", ".join(cuisine_name(x) for x in cs) or "none"
+        return "Different menu", f"🍽️ Cuisines: {names(old)} → {names(new)}"
+    if field == "n_cuisines":
+        return ("More cuisines" if new > old else "Fewer cuisines"), f"🔢 Total cuisines: {old} → {new}"
+    emoji, label = next((e, l) for f, e, l, _ in SERVICES if f == field)
+    title = f"No {SHORT[field]}" if new == "No" else f"With {SHORT[field]}"
+    return title, f"{emoji} {label}: {old} → {new}"
+
+
+def diff(concept: dict, other: dict) -> dict:
+    """Settings in `other` that differ from `concept` (cuisine order ignored)."""
+    same = lambda f: sorted(concept[f]) == sorted(other[f]) if f == "cuisines" else concept[f] == other[f]
+    return {f: other[f] for f in CONCEPT_FIELDS if not same(f)}
+
+
+def step_error(step: int, concept: dict) -> str | None:
+    """Friendly message if a wizard step can't be completed yet."""
+    if step == 1 and not concept["location"]:
+        return "Pick an area to continue. Choose “Other area” if yours isn't listed."
+    if step == 2 and not concept["primary_type"]:
+        return "Pick the kind of place to continue."
+    if step == 3 and len(concept["cuisines"]) > RANGES["n_cuisines"][1]:
+        return (f"Pick at most {RANGES['n_cuisines'][1]} main cuisines – that's the most any restaurant "
+                "in our data had.")
+    if step == 3 and len(concept["cuisines"]) > concept["n_cuisines"]:
+        n, total = len(concept["cuisines"]), concept["n_cuisines"]
+        return f"You picked {n} cuisines but the total says {total}. Make the total at least {n}."
+    if step == 4:
+        problems = validate_inputs(to_inputs(concept), need_cost=True)
+        return " ".join(problems) if problems else None
+    return None
+
+
+# ---------------------------------------------------------------- HTML pieces
+def clean(markup: str) -> str:
+    """Strip indentation so Streamlit never treats the HTML as a code block."""
+    return " ".join(line.strip() for line in markup.splitlines() if line.strip())
+
+
+def badge(text: str, tone: str) -> str:
+    bg, fg = TONES[tone]
+    return f'<span class="sc-badge" style="background:{bg};color:{fg};border-color:{fg}">{html.escape(text)}</span>'
+
+
+def chips(items: list[str]) -> str:
+    return '<div class="sc-chips">' + "".join(f'<span class="sc-chip">{html.escape(i)}</span>' for i in items) + "</div>"
+
+
+def concept_chips(c: dict) -> list[str]:
+    items = [f"📍 {c['location']}", f"{TYPE_EMOJI[c['primary_type']]} {c['primary_type']}"]
+    items += [f"{e} {l}" if c[f] == "Yes" else f"🚫 No {SHORT[f]}" for f, e, l, _ in SERVICES]
+    if c["cuisines"]:
+        items.append("".join(CUISINE_EMOJI[x] for x in c["cuisines"]) + f" {len(c['cuisines'])} main cuisines")
+    items += [f"{c['n_cuisines']} cuisines in total", f"💰 {rupees(c['cost_for_two'])} for two"]
+    return items
+
+
+def range_bar(res: dict) -> str:
+    """Typical range as a band, the estimate as a dot and the user's price as a marker."""
+    lo, hi, cost = res["low"], res["high"], res["cost"]
+    smin, smax = min(lo, cost), max(hi, cost)
+    pad = 0.15 * (smax - smin) + 1
+    smin, smax = smin - pad, smax + pad
+    pos = lambda x: (x - smin) / (smax - smin) * 100
+    fg = TONES[res["price_verdict"][1]][1]
+    return clean(f"""
+    <div class="sc-range">
+      <div class="sc-range-track"></div>
+      <div class="sc-range-band" style="left:{pos(lo):.1f}%;width:{pos(hi) - pos(lo):.1f}%"></div>
+      <div class="sc-range-dot" style="left:{pos(res['price']):.1f}%"></div>
+      <div class="sc-range-you" style="left:{pos(cost):.1f}%;background:{fg}"></div>
+      <div class="sc-range-youlabel" style="left:{pos(cost):.1f}%;color:{fg}">You {rupees(cost)}</div>
+    </div>
+    <div class="sc-muted sc-center">Typical range {rupees(lo)} – {rupees(hi)} · estimate {rupees(res['price'])}</div>""")
+
+
+def price_card(res: dict) -> str:
+    label, tone, sentence = res["price_verdict"]
+    return clean(f"""
+    <div class="sc-card">
+      <div class="sc-card-head"><span class="sc-h3">💰 Price check</span>{badge("Main result", "red")}</div>
+      <div class="sc-big">{rupees(res['price'])}<span class="sc-unit"> for two</span></div>
+      <div class="sc-muted">Typical market price at places like yours</div>
+      {range_bar(res)}
+      <div class="sc-verdict" style="background:{TONES[tone][0]}">{badge(label, tone)}<div>{html.escape(sentence)}</div></div>
+    </div>""")
+
+
+def rating_badge(prob: float, tone: str, size: str = "") -> str:
+    bg = TONES[tone][1]
+    return f'<span class="sc-rating {size}" style="background:{bg}">{prob:.0%}<small> ★4.0+</small></span>'
+
+
+def rating_card(res: dict) -> str:
+    label, tone, sentence = res["rating_verdict"]
+    fg = TONES[tone][1]
+    return clean(f"""
+    <div class="sc-card">
+      <div class="sc-card-head"><span class="sc-h3">⭐ Rating outlook</span></div>
+      <div class="sc-row">{rating_badge(res['prob'], tone, 'sc-rating-lg')}
+        <div><div style="color:{fg};font-weight:700">{label}</div>
+        <div>chance of a 4.0+ rating for places like yours</div></div></div>
+      <div class="sc-inset">{html.escape(sentence)}
+        <div class="sc-meter"><div style="width:{res['prob'] * 100:.0f}%;background:{fg}"></div></div></div>
+      <div class="sc-legend"><span style="color:{TONES['green'][1]}">● Strong 60%+</span>
+        <span style="color:{TONES['amber'][1]}">● Moderate 30–59%</span>
+        <span style="color:{TONES['red'][1]}">● Weak &lt;30%</span></div>
+    </div>""")
+
+
+def scenario_card(sc: dict) -> str:
+    res = sc["result"]
+    label, tone, _ = res["price_verdict"]
+    r_label, r_tone, _ = res["rating_verdict"]
+    return clean(f"""
+    <div class="sc-swipe-card">
+      <div class="sc-card-head"><span class="sc-h3">{html.escape(sc['title'])}</span>{badge(sc['tag'], "red") if sc['tag'] else ""}</div>
+      <div class="sc-kv"><span>Market price</span><b>{rupees(res['price'])}</b></div>
+      <div class="sc-kv sc-muted"><span>Typical range</span><span>{rupees(res['low'])} – {rupees(res['high'])}</span></div>
+      <div class="sc-kv"><span>Your price</span><b>{rupees(res['cost'])}</b></div>
+      <div class="sc-kv"><span>Price verdict</span>{badge(label, tone)}</div>
+      <div class="sc-kv"><span>Chance of 4.0+</span>{rating_badge(res['prob'], r_tone)}</div>
+      <div class="sc-kv"><span>Rating outlook</span><b style="color:{TONES[r_tone][1]}">{r_label}</b></div>
+      <details class="sc-details"><summary>All settings</summary>{chips(concept_chips(sc['concept']))}</details>
+    </div>""")
+
+
+def scenarios(concept: dict, whatifs: list[dict]) -> list[dict]:
+    """Title, tag, change lines, full settings and model result for the base concept and each what-if.
+
+    A what-if is {"changes": {setting: new value, ...}} relative to the base concept.
+    """
+    out = [{"title": "Your concept", "tag": "Base", "changes": [], "concept": concept,
+            "result": assess(to_inputs(concept))}]
+    for i, w in enumerate(whatifs):
+        changed = {**concept, **w["changes"]}
+        described = [describe_change(f, concept[f], v) for f, v in w["changes"].items()]
+        title = described[0][0] if len(described) == 1 else f"What-if {chr(66 + i)}"
+        out.append({"title": title, "tag": "", "changes": [d[1] for d in described], "concept": changed,
+                    "result": assess(to_inputs(changed))})
+    return out
+
+
+def summary_html(concept: dict, whatifs: list[dict]) -> str:
+    rows = scenarios(concept, whatifs)
+    res = rows[0]["result"]
+    cuisines = ", ".join(cuisine_name(c) for c in concept["cuisines"]) or "none of the 12 listed"
+    services = " · ".join(f"{e} {l}: {concept[f]}" for f, e, l, _ in SERVICES)
+    whatif_rows = "".join(
+        f"<tr><td>{chr(65 + i)} {html.escape(sc['title'])}"
+        + "".join(f'<div class="sc-small">{html.escape(line)}</div>' for line in sc["changes"])
+        + f"</td><td>{rupees(sc['result']['price'])}</td><td>{sc['result']['price_verdict'][0]}</td>"
+        f"<td>{sc['result']['prob']:.0%}</td></tr>" for i, sc in enumerate(rows))
+    keep = "".join(f"<li>{html.escape(k)}</li>" for k in KEEP_IN_MIND)
+    return clean(f"""
+    <div class="sc-summary">
+      <h2>📍🍽️ SpotCheck – concept summary</h2>
+      <p class="sc-muted">{dt.date.today():%d %b %Y} · Nothing is saved online. Download this summary to keep it.</p>
+      <h3>Your concept</h3>
+      <p>📍 {html.escape(concept['location'])} · {TYPE_EMOJI[concept['primary_type']]} {html.escape(concept['primary_type'])}<br>
+      {services}<br>Main cuisines: {html.escape(cuisines)} · {concept['n_cuisines']} cuisines in total<br>
+      💰 Planned {rupees(concept['cost_for_two'])} for two</p>
+      <h3>Results</h3>
+      <p>Typical market price <b>{rupees(res['price'])}</b> (range {rupees(res['low'])} – {rupees(res['high'])}) –
+      <b>{res['price_verdict'][0]}</b>.<br>Chance of a 4.0+ rating <b>{res['prob']:.0%}</b> – <b>{res['rating_verdict'][0]}</b>.</p>
+      <h3>What-ifs</h3>
+      <table><tr><th>Scenario</th><th>Market price</th><th>Price verdict</th><th>4.0+ chance</th></tr>{whatif_rows}</table>
+      <h3>Keep in mind</h3><ul>{keep}</ul>
+      <p class="sc-small">Data: 'Zomato Bangalore Restaurants' by Himanshu Poddar, Kaggle (about 2019).
+      Models: Random Forest (price), Logistic Regression (rating). SpotCheck – MICA ML Capstone. Not affiliated with Zomato.</p>
+    </div>""")
+
+
+CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+.stApp, .stApp *:not([data-testid="stIconMaterial"]) {font-family: 'Inter', sans-serif;}
+.stApp {background: #F8F8F8;}
+header[data-testid="stHeader"] {display: none;}
+.block-container {max-width: 480px; padding: 0.75rem 1rem 7rem;}
+.sc-top {display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;}
+.sc-logo {color: #E23744; font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em;}
+.sc-pill {font-size: 0.72rem; font-weight: 700; color: #24963F; background: #EAF7EE; border-radius: 9999px; padding: 3px 10px;}
+.sc-hero {background: linear-gradient(135deg, #E23744, #B7122A); color: #fff; border-radius: 16px; padding: 18px 16px; margin-bottom: 14px;}
+.sc-hero h1 {color: #fff; font-size: 1.6rem; font-weight: 800; line-height: 1.2; margin: 0 0 6px; padding: 0;}
+.sc-hero p {margin: 0; opacity: 0.92; font-size: 0.92rem;}
+.sc-h2 {font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; margin: 4px 0 2px; color: #1C1C1C;}
+.sc-h3 {font-size: 1.05rem; font-weight: 700; color: #1C1C1C;}
+.sc-muted {color: #696969; font-size: 0.86rem;}
+.sc-small {color: #696969; font-size: 0.75rem;}
+.sc-center {text-align: center;}
+.sc-card, .sc-swipe-card {background: #fff; border: 1px solid #E8E8E8; border-radius: 16px; padding: 16px;
+  box-shadow: 0 2px 8px rgba(28,28,28,0.04); margin-bottom: 14px;}
+.sc-card-head {display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px;}
+.sc-big {font-size: 2.3rem; font-weight: 800; letter-spacing: -0.03em; font-feature-settings: "tnum" 1;}
+.sc-unit {font-size: 0.95rem; font-weight: 500; color: #696969;}
+.sc-badge {display: inline-block; border: 1px solid; border-radius: 6px; padding: 2px 8px; font-size: 0.75rem; font-weight: 700; white-space: nowrap;}
+.sc-verdict {border-radius: 12px; padding: 10px 12px; margin-top: 12px; font-size: 0.88rem; display: flex; flex-direction: column; gap: 4px;}
+.sc-range {position: relative; height: 44px; margin: 18px 4px 4px;}
+.sc-range-track {position: absolute; top: 22px; left: 0; right: 0; height: 10px; background: #EEE; border-radius: 9999px;}
+.sc-range-band {position: absolute; top: 22px; height: 10px; background: #FFB3B1; border-radius: 9999px;}
+.sc-range-dot {position: absolute; top: 18px; width: 18px; height: 18px; margin-left: -9px; background: #E23744; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,.25);}
+.sc-range-you {position: absolute; top: 19px; width: 14px; height: 14px; margin-left: -7px; transform: rotate(45deg); border: 2px solid #fff;}
+.sc-range-youlabel {position: absolute; top: 0; transform: translateX(-50%); font-size: 0.75rem; font-weight: 700; white-space: nowrap;}
+.sc-row {display: flex; align-items: center; gap: 12px;}
+.sc-rating {display: inline-block; color: #fff; font-weight: 800; border-radius: 8px; padding: 3px 8px; font-size: 0.85rem; white-space: nowrap; font-feature-settings: "tnum" 1;}
+.sc-rating small {font-weight: 600; font-size: 0.7em;}
+.sc-rating-lg {font-size: 1.8rem; padding: 8px 14px; border-radius: 14px; flex: 0 0 auto; text-align: center; line-height: 1.1;}
+.sc-rating-lg small {display: block; font-size: 0.45em;}
+.sc-list {margin: 0; padding-left: 18px; font-size: 0.88rem; color: #3B3B3B;}
+.sc-list li {margin-bottom: 4px;}
+.sc-inset {background: #F6F3F2; border-radius: 12px; padding: 12px; margin-top: 12px; font-size: 0.9rem;}
+.sc-meter {height: 8px; background: #E5E2E1; border-radius: 9999px; margin-top: 10px; overflow: hidden;}
+.sc-meter div {height: 100%; border-radius: 9999px;}
+.sc-legend {display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.74rem; font-weight: 700; margin-top: 10px;}
+.sc-chips {display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin: 6px 0 12px; scrollbar-width: none;}
+.sc-chip {background: #fff; border: 1px solid #E8E8E8; border-radius: 9999px; padding: 5px 11px; font-size: 0.8rem; white-space: nowrap;}
+.sc-swipe {display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 2px 10px; -webkit-overflow-scrolling: touch;}
+.sc-swipe-card {flex: 0 0 82%; scroll-snap-align: start; margin-bottom: 0;}
+.sc-details {margin-top: 8px; font-size: 0.82rem;}
+.sc-details summary {cursor: pointer; color: #B7122A; font-weight: 600;}
+.sc-details .sc-chips {flex-wrap: wrap; overflow: visible; margin: 8px 0 0;}
+.sc-changed {background: #FFF0F1; color: #B7122A; border-radius: 8px; padding: 6px 10px; font-size: 0.82rem; font-weight: 600; margin-bottom: 10px;}
+.sc-kv {display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #EEE; font-size: 0.88rem;}
+.sc-note {background: #FEF8EC; border: 1px solid #F2D58A; border-radius: 12px; padding: 12px; font-size: 0.86rem; margin: 6px 0 14px;}
+.sc-step {font-size: 0.8rem; font-weight: 700; color: #E23744; letter-spacing: 0.02em;}
+.sc-summary h2 {font-size: 1.2rem; font-weight: 800; margin: 0 0 4px;}
+.sc-summary p, .sc-summary li {font-size: 0.9rem;}
+.sc-summary h3 {font-size: 1rem; font-weight: 700; color: #B7122A; margin: 14px 0 4px;}
+.sc-summary table {width: 100%; border-collapse: collapse; font-size: 0.82rem;}
+.sc-summary th, .sc-summary td {text-align: left; padding: 5px 4px; border-bottom: 1px solid #EEE;}
+.sc-footer {text-align: center; color: #696969; font-size: 0.72rem; padding: 18px 8px 8px;}
+.stButton button, .stDownloadButton button {border-radius: 9999px; font-weight: 600; min-height: 46px;}
+.stButton button[kind="primary"], .stDownloadButton button[kind="primary"] {min-height: 52px; box-shadow: 0 4px 12px rgba(226,55,68,0.25);}
+.st-key-playcard, .st-key-whatif_form, .st-key-services {background: #fff; border: 1px solid #E8E8E8; border-radius: 16px; padding: 16px;}
+.st-key-bottomnav {position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px;
+  background: #fff; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); z-index: 1000;}
+.st-key-bottomnav [data-testid="stButtonGroup"] {width: 100%;}
+.st-key-bottomnav [data-testid="stButtonGroup"] button {flex: 1 1 0; min-width: 0; padding: 6px 2px; font-size: 0.8rem;}
+</style>
+"""
+
+
+# ---------------------------------------------------------------- state helpers
+def init_state() -> None:
+    defaults = {"page": "check", "step": 1, "concept": new_concept(), "whatifs": [], "error": None, "assessed": False}
+    for key, value in defaults.items():
+        st.session_state.setdefault(key, value)
+    # Sessions started before what-ifs could change several settings stored one {"field", "value"} each.
+    st.session_state.whatifs = [w if "changes" in w else {"changes": {w["field"]: w["value"]}}
+                                for w in st.session_state.whatifs]
+
+
+def bind(key: str, value) -> None:
+    """Give a widget its starting value from the concept the first time it is drawn (avoids default/state clashes)."""
+    if key not in st.session_state:
+        st.session_state[key] = value
+
+
+def store(field: str, key: str) -> None:
+    st.session_state.concept[field] = st.session_state[key]
+
+
+def go(page: str, step: int | None = None) -> None:
+    st.session_state.page = page
+    st.session_state.error = None
+    if step is not None:
+        st.session_state.step = step
+
+
+def next_step() -> None:
+    step = st.session_state.step
+    st.session_state.error = step_error(step, st.session_state.concept)
+    if st.session_state.error:
+        return
+    if step < len(STEPS):
+        st.session_state.step = step + 1
+    else:
+        st.session_state.assessed = True
+        go("results")
+
+
+def back_step() -> None:
+    st.session_state.error = None
+    st.session_state.step = max(1, st.session_state.step - 1)
+
+
+def reset_all() -> None:
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+
+
+# ---------------------------------------------------------------- pages
+def top_bar() -> None:
+    st.html('<div class="sc-top"><span class="sc-logo">📍🍽️ SpotCheck</span><span class="sc-pill">No sign-up</span></div>')
+
+
+def footer() -> None:
+    st.html(f'<div class="sc-footer">{FOOTER}</div>')
+
+
+def page_check() -> None:
+    c, step = st.session_state.concept, st.session_state.step
+    if step == 1:
+        st.html(clean("""<div class="sc-hero"><h1>Will your restaurant idea work?</h1>
+            <p>Check your price and rating chances in 2 minutes. Based on 9,244 Bangalore restaurants. No sign-up.</p></div>"""))
+    st.progress(step / len(STEPS), text=f"Step {step} of {len(STEPS)} · {STEPS[step - 1]}")
+    if st.session_state.error:
+        st.error(f"⚠️ {st.session_state.error}")
+
+    if step == 1:
+        st.html('<div class="sc-h2">Where will it be?</div>')
+
+        def chip_changed():
+            value = st.session_state.w_area_chip
+            if value:
+                c["location"] = value
+                st.session_state.w_area_search = value
+
+        def search_changed():
+            value = st.session_state.w_area_search
+            c["location"] = value
+            st.session_state.w_area_chip = value if value in POPULAR_AREAS else None
+
+        bind("w_area_search", c["location"])
+        bind("w_area_chip", c["location"] if c["location"] in POPULAR_AREAS else None)
+        st.selectbox("Search all 40 Bangalore areas", ALLOWED["location"], key="w_area_search",
+                     placeholder="🔍 Search 40 Bangalore areas…", on_change=search_changed)
+        st.pills("Popular areas", POPULAR_AREAS, key="w_area_chip", on_change=chip_changed,
+                 format_func=lambda a: "✨ Other area" if a == "Other" else a)
+        st.caption("Choose “Other area” if yours isn't listed.")
+
+    elif step == 2:
+        st.html('<div class="sc-h2">What kind of place?</div>')
+        bind("w_type", c["primary_type"])
+        st.pills("Restaurant type", ALLOWED["primary_type"], key="w_type", on_change=store, args=("primary_type", "w_type"),
+                 format_func=lambda t: f"{TYPE_EMOJI[t]} {t}", label_visibility="collapsed")
+        with st.container(key="services"):
+            st.markdown("**Services**")
+            for field, emoji, label, hint in SERVICES:
+                bind(f"w_{field}", c[field] == "Yes")
+                st.toggle(f"{emoji} {label}", key=f"w_{field}", help=hint,
+                          on_change=lambda f=field: c.__setitem__(f, "Yes" if st.session_state[f"w_{f}"] else "No"))
+
+    elif step == 3:
+        st.html('<div class="sc-h2">What\'s on the menu?</div>')
+        low, high = RANGES["n_cuisines"]
+
+        def cuisines_changed():
+            # The total follows the chips; cuisines added with + (not in the list) are kept on top.
+            extras = c["n_cuisines"] - len(c["cuisines"]) if st.session_state.get("extras_added") else 0
+            c["cuisines"] = list(st.session_state.w_cuisines)
+            c["n_cuisines"] = min(high, max(low, len(c["cuisines"]) + max(0, extras)))
+            st.session_state.w_n_cuisines = c["n_cuisines"]
+
+        def total_changed():
+            c["n_cuisines"] = st.session_state.w_n_cuisines
+            st.session_state.extras_added = c["n_cuisines"] > len(c["cuisines"])
+
+        bind("w_cuisines", list(c["cuisines"]))
+        st.pills("Tap all main cuisines you'll serve", CUISINE_FLAGS, selection_mode="multi", key="w_cuisines",
+                 on_change=cuisines_changed, format_func=lambda f: f"{CUISINE_EMOJI[f]} {cuisine_name(f)}")
+        st.caption(f"{len(c['cuisines'])} selected · the total below updates as you tap")
+        bind("w_n_cuisines", int(c["n_cuisines"]))
+        st.number_input("Total number of cuisines on your menu", min_value=low, max_value=high, step=1,
+                        key="w_n_cuisines", on_change=total_changed,
+                        help=f"Press + for cuisines that aren't in the list above (up to {high} in total).")
+
+    else:
+        st.html('<div class="sc-h2">What will two people pay?</div>')
+
+        def slider_changed():
+            c["cost_for_two"] = st.session_state.w_cost_slider
+            st.session_state.w_cost_exact = c["cost_for_two"]
+
+        def exact_changed():
+            c["cost_for_two"] = int(st.session_state.w_cost_exact)
+            st.session_state.w_cost_slider = min(max(c["cost_for_two"], SLIDER_MIN), SLIDER_MAX)
+
+        bind("w_cost_slider", min(max(int(c["cost_for_two"]), SLIDER_MIN), SLIDER_MAX))
+        bind("w_cost_exact", int(c["cost_for_two"]))
+        st.html(f'<div class="sc-big">{rupees(c["cost_for_two"])}<span class="sc-unit"> for two</span></div>')
+        st.slider("Planned cost for two", SLIDER_MIN, SLIDER_MAX, step=SLIDER_STEP, key="w_cost_slider",
+                  format="₹%d", on_change=slider_changed, label_visibility="collapsed")
+        low, high = RANGES["cost_for_two"]
+        with st.expander("Type an exact amount"):
+            st.number_input(f"Exact cost for two (₹{low:,} – ₹{high:,})", min_value=low, max_value=high, step=10,
+                            key="w_cost_exact", on_change=exact_changed)
+        if c["location"] and c["primary_type"]:
+            st.html('<div class="sc-muted">Your concept so far</div>' + chips(concept_chips(c)))
+
+    with st.container(horizontal=True):
+        if step > 1:
+            st.button("← Back", on_click=back_step, width="stretch")
+        label = "Check my concept ✨" if step == len(STEPS) else f"Next: {STEPS[step]} →"
+        st.button(label, type="primary", on_click=next_step, width="stretch")
+
+
+def page_results() -> None:
+    c = st.session_state.concept
+    res = assess(to_inputs(c))
+    st.button("← Edit concept", on_click=go, args=("check", 1), type="tertiary")
+    st.html('<div class="sc-h2">Your concept check</div>' + chips(concept_chips(c)))
+    st.html(price_card(res))
+    st.html(rating_card(res))
+
+    with st.container(key="playcard"):
+        st.html(f'<div class="sc-card-head"><span class="sc-h3">🎚️ Play with your price</span>{badge("Interactive", "red")}</div>'
+                '<div class="sc-muted">Drag to see how your price compares – results update instantly.</div>')
+        bind("w_play", min(max(int(c["cost_for_two"]), SLIDER_MIN), SLIDER_MAX))
+        play = st.slider("Testing price for two", SLIDER_MIN, SLIDER_MAX, step=SLIDER_STEP, key="w_play", format="₹%d")
+        test = assess({**to_inputs(c), "cost_for_two": play})
+        label, tone, sentence = test["price_verdict"]
+        st.html(clean(f"""<div class="sc-inset"><b>At {rupees(play)} for two:</b>
+            <div class="sc-row" style="margin-top:8px;flex-wrap:wrap">{badge(label, tone)}
+            {rating_badge(test['prob'], test['rating_verdict'][1])}</div>
+            <div class="sc-small" style="margin-top:8px">{html.escape(sentence)} Pricier places tend to be rated higher – a pattern, not a cause.</div></div>"""))
+
+    with st.expander("ℹ️ Keep in mind", expanded=True):
+        st.html('<ul class="sc-list">' + "".join(f"<li>{html.escape(k)}</li>" for k in KEEP_IN_MIND) + "</ul>")
+    with st.expander("Details for experienced owners"):
+        st.html(clean(f"""<ul class="sc-list">
+            <li><b>Price model:</b> Random Forest (100 trees), typically within ₹{PRICE_BAND} of real prices
+            (10-fold cross-validation, R² 0.73).</li>
+            <li><b>Rating model:</b> Logistic Regression, AUC 0.81; its percentages are well calibrated.</li>
+            <li>Your estimate: {rupees(res['price'])}; chance of 4.0+: {res['prob']:.1%}.</li></ul>"""))
+    st.button("Try a what-if 🔁", type="primary", on_click=go, args=("compare",), width="stretch")
+    st.button("📄 Get my summary", on_click=go, args=("summary",), width="stretch")
+
+
+WI_KEYS = {"location": "wi_location", "primary_type": "wi_type", "has_bar": "wi_has_bar",
+           "online_order": "wi_online_order", "book_table": "wi_book_table", "cuisines": "wi_cuisines",
+           "n_cuisines": "wi_n", "cost_for_two": "wi_cost"}
+
+
+def add_whatif() -> None:
+    """Form submit: build the what-if from every setting, check it, and add it as a card."""
+    ss, c = st.session_state, st.session_state.concept
+    new = {f: ss[k] for f, k in WI_KEYS.items()}
+    for f, _, _, _ in SERVICES:
+        new[f] = "Yes" if new[f] else "No"
+    new["cuisines"] = [x for x in CUISINE_FLAGS if x in new["cuisines"]]
+    new["n_cuisines"] = min(RANGES["n_cuisines"][1], max(int(new["n_cuisines"]), len(new["cuisines"]), 1))
+    new["cost_for_two"] = int(new["cost_for_two"])
+    changes = diff(c, new)
+    problem = (step_error(3, new) or step_error(4, new)
+               or ("Change at least one setting to make a what-if." if not changes else None)
+               or ("You've already added this what-if." if {"changes": changes} in ss.whatifs else None))
+    ss.wi_error = problem
+    if not problem:
+        ss.whatifs.append({"changes": changes})
+        for k in WI_KEYS.values():  # next form starts again from the concept
+            ss.pop(k, None)
+
+
+def whatif_form(c: dict, whatifs: list[dict]) -> None:
+    for f, k in WI_KEYS.items():
+        value = c[f] == "Yes" if f in SHORT else list(c[f]) if f == "cuisines" else c[f]
+        bind(k, value)
+    use_slider = SLIDER_MIN <= c["cost_for_two"] <= SLIDER_MAX
+    with st.container(key="whatif_form"):
+        st.markdown(f"**➕ Add what-if card {len(whatifs) + 1} of {MAX_WHATIFS}**")
+        st.caption("Starts from your concept – change as many settings as you like, then add the card.")
+        if st.session_state.get("wi_error"):
+            st.error(f"⚠️ {st.session_state.wi_error}")
+        with st.form("whatif", border=False):
+            st.selectbox("📍 Location", ALLOWED["location"], key="wi_location")
+            st.selectbox("Restaurant type", ALLOWED["primary_type"], key="wi_type",
+                         format_func=lambda t: f"{TYPE_EMOJI[t]} {t}")
+            for field, emoji, label, hint in SERVICES:
+                st.toggle(f"{emoji} {label}", key=f"wi_{field}", help=hint)
+            st.pills("Main cuisines", CUISINE_FLAGS, selection_mode="multi", key="wi_cuisines",
+                     format_func=lambda f: f"{CUISINE_EMOJI[f]} {cuisine_name(f)}")
+            low, high = RANGES["n_cuisines"]
+            st.number_input("Total number of cuisines", min_value=low, max_value=high, step=1, key="wi_n",
+                            help="Raised automatically to at least the number of cuisines ticked above.")
+            if use_slider:
+                st.slider("💰 Planned price for two", SLIDER_MIN, SLIDER_MAX, step=SLIDER_STEP, key="wi_cost",
+                          format="₹%d")
+            else:
+                st.number_input("💰 Planned price for two (₹)", *RANGES["cost_for_two"], step=10, key="wi_cost")
+            st.form_submit_button("+ Add what-if card", type="primary", on_click=add_whatif, width="stretch")
+
+
+def page_compare() -> None:
+    st.html('<div class="sc-h2">What if…?</div><div class="sc-muted">Compare your concept with up to 3 what-ifs. Swipe to see them all.</div>')
+    if not st.session_state.assessed:
+        st.info("Check a concept first – then try what-ifs here.")
+        st.button("Start with my concept →", type="primary", on_click=go, args=("check", 1), width="stretch")
+        return
+    c, whatifs = st.session_state.concept, st.session_state.whatifs
+    rows = scenarios(c, whatifs)
+    st.html('<div class="sc-swipe">' + "".join(scenario_card(sc) for sc in rows) + "</div>")
+    if len(rows) > 1:
+        st.caption("Swipe sideways to see every card. Tap “All settings” on a card to see its full setup.")
+        with st.container(horizontal=True):
+            for i, sc in enumerate(rows[1:]):
+                st.button(f"✕ Remove “{sc['title']}”", key=f"rm_{i}", type="tertiary",
+                          on_click=lambda i=i: st.session_state.whatifs.pop(i))
+
+    if len(whatifs) < MAX_WHATIFS:
+        whatif_form(c, whatifs)
+    else:
+        st.caption(f"Up to {MAX_WHATIFS} what-if cards – remove one to add another.")
+
+    st.html(clean("""<div class="sc-note">💡 <b>Why can a higher price raise the rating chance?</b> In the data, pricier
+        restaurants tend to be rated higher. That's a pattern, not a promise – raising your price alone won't improve
+        your rating.</div>"""))
+    st.button("📄 Get my summary", type="primary", on_click=go, args=("summary",), width="stretch")
+    st.button("← Back to results", on_click=go, args=("results",), width="stretch")
+
+
+def page_summary() -> None:
+    if not st.session_state.assessed:
+        st.info("Check a concept first – your summary appears here.")
+        st.button("Start with my concept →", type="primary", on_click=go, args=("check", 1), width="stretch")
+        return
+    body = summary_html(st.session_state.concept, st.session_state.whatifs)
+    st.html(f'<div class="sc-card">{body}</div>')
+    document = (f'<!doctype html><html><head><meta charset="utf-8"><title>SpotCheck summary</title>{CSS}</head>'
+                f'<body style="max-width:640px;margin:24px auto;padding:0 16px">{body}</body></html>')
+    st.download_button("⬇️ Download summary", document, file_name="spotcheck_summary.html", mime="text/html",
+                       type="primary", width="stretch")
+    st.button("Start a new concept", on_click=reset_all, width="stretch")
+
+
+def page_about() -> None:
+    st.html(clean(f"""
+    <div class="sc-h2">How SpotCheck works</div>
+    <div class="sc-card"><div class="sc-row">📝<div><b>Describe your idea in 4 steps</b></div></div></div>
+    <div class="sc-card"><div class="sc-row">🤖<div><b>Two models compare it with 9,244 Bangalore restaurants</b></div></div></div>
+    <div class="sc-card"><div class="sc-row">📊<div><b>Get a price check and a rating outlook</b></div></div></div>
+    <div class="sc-h2" style="margin-top:12px">How accurate is it?</div>
+    <div class="sc-card"><div class="sc-h3">💰 Price: typically within ₹{PRICE_BAND}</div>
+      <div class="sc-muted">Average error on restaurants the model hadn't seen (10-fold cross-validation).
+      Random Forest model; it holds up on restaurant chains it never saw during training.</div></div>
+    <div class="sc-card"><div class="sc-h3">⭐ Rating: ranks correctly 81% of the time</div>
+      <div class="sc-muted">Ranks a 4.0+ place above a lower-rated one 81% of the time (AUC 0.81). When it says 30%,
+      about 30% of such places really are rated 4.0+. Logistic Regression model.</div></div>
+    <div class="sc-h2" style="margin-top:12px">The data</div>
+    <div class="sc-card sc-muted">9,244 Bangalore restaurants with ratings from the Kaggle dataset 'Zomato Bangalore
+      Restaurants' by Himanshu Poddar (scraped about 2019). We only use what you decide before opening – location,
+      format, menu and price – never reviews or votes.</div>
+    <div class="sc-h2" style="margin-top:12px">Limitations</div>
+    <div class="sc-card"><ul style="margin:0;padding-left:18px">
+      <li>⚠️ Food, service and hygiene aren't in the data.</li><li>⚠️ Closed restaurants are missing.</li>
+      <li>⚠️ A single snapshot from about 2019.</li><li>⚠️ Patterns, not cause and effect.</li><li>⚠️ Bangalore only.</li></ul></div>
+    <div class="sc-muted sc-center">SpotCheck is a student project for the MICA ML Capstone.<br>
+      Not affiliated with Zomato. No sign-up, no data stored.</div>"""))
+
+
+PAGES = {"check": page_check, "results": page_results, "compare": page_compare, "summary": page_summary,
+         "about": page_about}
+NAV = {"predictor": "🍽️ Predictor", "compare": "🔁 Compare", "about": "ℹ️ About"}
+
+
+def bottom_nav() -> None:
+    page = st.session_state.page
+    st.session_state.w_nav = "compare" if page == "compare" else "about" if page == "about" else "predictor"
+
+    def nav_changed():
+        target = st.session_state.w_nav
+        if target == "predictor":
+            go("results" if st.session_state.assessed else "check")
+        else:
+            go(target)
+
+    with st.container(key="bottomnav"):
+        st.segmented_control("Navigation", list(NAV), key="w_nav", format_func=NAV.get, required=True,
+                             on_change=nav_changed, label_visibility="collapsed", width="stretch")
+
+
+def main() -> None:
+    st.set_page_config(page_title="SpotCheck – restaurant concept check", page_icon="🍽️", layout="centered")
+    st.html(CSS)
+    init_state()
+    top_bar()
+    PAGES[st.session_state.page]()
+    footer()
+    bottom_nav()
+
+
+if __name__ == "__main__":
+    main()

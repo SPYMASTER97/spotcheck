@@ -1,0 +1,20 @@
+# Raw and Orange data: never commit (zomato.csv is 574 MB; Kaggle licence)
+zomato.csv
+zomato*.csv
+*.tab
+*.xlsx
+~$*
+
+# Secrets
+.env
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# OS
+.DS_Store
