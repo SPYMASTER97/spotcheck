@@ -284,7 +284,9 @@ def scenarios(concept: dict, whatifs: list[dict]) -> list[dict]:
 
 
 def scenario_label(rows: list[dict], i: int) -> str:
-    return f"{rows[i]['title']} ({'Base' if i == 0 else f'What-if {chr(65 + i)}'})"
+    """'No table booking (What-if B)'; a card already titled 'What-if B' isn't repeated."""
+    title, tag = rows[i]["title"], "Base" if i == 0 else f"What-if {chr(65 + i)}"
+    return title if title == tag else f"{title} ({tag})"
 
 
 def facts_text(inputs: dict) -> str:

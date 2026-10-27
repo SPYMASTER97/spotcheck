@@ -51,6 +51,9 @@ def test_step_errors():
     assert concept["n_cuisines"] == 0 and concept["online_order"] == "No"     # nothing picked, online off by default
     assert "at least one cuisine" in app.step_error(3, concept)
     assert app.cuisine_name("c_Cafe") == "Coffee"
+    rows = [{"title": "Your concept"}, {"title": "What-if B"}, {"title": "No table booking"}]
+    assert [app.scenario_label(rows, i) for i in range(3)] == ["Your concept (Base)", "What-if B",
+                                                                "No table booking (What-if C)"]
     concept.update(cuisines=CUISINE_FLAGS[:4], n_cuisines=2)
     assert "4 cuisines" in app.step_error(3, concept)
     concept.update(cuisines=CUISINE_FLAGS[:9], n_cuisines=8)
