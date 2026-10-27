@@ -1,0 +1,11 @@
+TestID,restaurant_name,floor_area_sqft (actual),floor_area_sqft (predicted),staff_count (actual),staff_count (predicted),investment_lakh (actual),investment_lakh (predicted),food_cost_pct (actual),food_cost_pct (predicted),revenue_lakh (actual),revenue_lakh (predicted)
+T01,Hotel Sakti Saravana,669.7,684.461,7.4,9.083,26.8,23.137,28.7,29.745,7.8,7.724
+T02,Sizzling Szechuan,1333.9,1239.032,13.6,13.07,58.7,51.808,31.8,30.35,8.8,9.321
+T03,Roundup Cafe,1104.7,1204.335,13.0,11.693,45.8,43.014,25.9,26.102,9.7,10.203
+T04,ReadyBowl,401.8,565.567,10.0,8.523,26.8,20.222,36.9,34.179,7.4,6.562
+T05,Papacream,624.7,684.902,4.1,5.744,22.1,22.258,32.7,30.092,4.5,4.961
+T06,Jeff's - Royal Orchid Hotel,1978.6,1755.114,16.9,16.472,89.4,90.999,29.8,27.013,17.4,16.709
+T07,Just Bake,586.5,585.981,8.1,7.374,20.6,19.845,27.7,28.918,8.0,6.872
+T08,Mojo Pizza - 2X Toppings,506.4,483.238,7.4,5.692,13.3,10.873,34.3,32.054,5.9,5.901
+T09,Drava,2051.9,2142.498,19.3,20.479,92.1,85.294,32.3,29.933,20.4,20.047
+T10,Samarkand,1729.5,1790.509,15.7,15.923,65.4,71.734,27.7,29.821,14.6,14.862

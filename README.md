@@ -9,6 +9,15 @@ price slider, swipeable what-if comparison, a downloadable summary and an About 
 There is no login: the app opens directly at the form, and nothing is stored on a server.
 Not affiliated with Zomato.
 
+**Live app:** https://spotcheck-tbcb5npizuvfmpfgto7a2a.streamlit.app/
+
+**Plan (new):** pick a card in Compare → "Plan this concept →" → a chat estimates floor area, staff,
+initial investment, food cost and monthly revenue, plus break-even. These five come from Linear Regression
+models trained on **synthetic** data (see `planner/README.md` and `planner/EVALUATION.md`) and are labelled
+as such in the app. Optional: Google Gemini only reads the user's message (set `GEMINI_API_KEY`, and optionally
+`GEMINI_MODEL`, in Streamlit Cloud → Settings → Secrets); every number comes from the models, and without a
+key the chat uses built-in rules.
+
 ## Files
 
 | File | What it is |
@@ -21,7 +30,8 @@ Not affiliated with Zomato.
 | `requirements.txt` | Exact library versions. The models must be loaded with the scikit-learn version that saved them. |
 | `reference_tests.csv` | The 10 hold-out restaurants (T01–T10) with the expected model outputs in the last columns. |
 | `test_reference.py` | Integration check: `predict.py` must reproduce `reference_tests.csv` (price ±₹1, probability ±0.001). |
-| `test_app.py` | App check: the app shows the reference outputs for all 10 restaurants and every page renders. |
+| `test_app.py` | App check: the app shows the reference outputs for all 10 restaurants, every page renders, and the Plan flow works (card selection, chat, answer cards, summary). |
+| `planner/` | Plan chat: `plan_predict.py` (5 planner models + break-even formula), `chat_engine.py` (question reading, follow-ups), models in `planner/models/`, tests in `test_planner.py`. Synthetic training data is not included. |
 
 ## Run the app and the checks
 
@@ -30,9 +40,10 @@ pip install -r requirements.txt
 streamlit run app.py
 python test_reference.py
 python test_app.py
+python planner/test_planner.py
 ```
 
-Both checks must print `PASSED` before every push.
+All three checks must print `PASSED` before every push.
 
 ## Retraining
 

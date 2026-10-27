@@ -1,0 +1,168 @@
+target,term,coefficient
+floor_area_sqft,intercept,146.4714
+floor_area_sqft,primary_type_Bar,603.7772
+floor_area_sqft,primary_type_Beverage Shop,-46.5218
+floor_area_sqft,primary_type_Cafe,194.9559
+floor_area_sqft,primary_type_Casual Dining,495.4218
+floor_area_sqft,primary_type_Delivery,-54.654
+floor_area_sqft,primary_type_Dessert Parlor,-10.0137
+floor_area_sqft,primary_type_Food Court,0.5697
+floor_area_sqft,primary_type_Other,302.0221
+floor_area_sqft,primary_type_Quick Bites,49.5866
+floor_area_sqft,primary_type_Sweet Shop,-7.8889
+floor_area_sqft,primary_type_Takeaway,5.5831
+floor_area_sqft,book_table_Yes,243.3861
+floor_area_sqft,has_bar_Yes,292.04
+floor_area_sqft,n_cuisines,40.4459
+floor_area_sqft,cost_for_two,0.2558
+floor_area_sqft,guests_per_day,3.0093
+floor_area_sqft,delivery_share,-2.446
+staff_count,intercept,-2.7812
+staff_count,primary_type_Bar,6.1012
+staff_count,primary_type_Beverage Shop,-0.1502
+staff_count,primary_type_Cafe,1.9813
+staff_count,primary_type_Casual Dining,4.9254
+staff_count,primary_type_Delivery,-0.1035
+staff_count,primary_type_Dessert Parlor,-0.0909
+staff_count,primary_type_Food Court,0.0018
+staff_count,primary_type_Other,2.9399
+staff_count,primary_type_Quick Bites,0.8936
+staff_count,primary_type_Sweet Shop,-0.0494
+staff_count,primary_type_Takeaway,-0.0815
+staff_count,book_table_Yes,1.0094
+staff_count,has_bar_Yes,1.9249
+staff_count,n_cuisines,0.4961
+staff_count,cost_for_two,0.003
+staff_count,guests_per_day,0.0299
+staff_count,opening_hours,0.192
+staff_count,menu_items,0.02
+staff_count,delivery_share,0.0204
+investment_lakh,intercept,9.3104
+investment_lakh,location_Banashankari,-2.3341
+investment_lakh,location_Banaswadi,-1.2851
+investment_lakh,location_Bannerghatta Road,0.1221
+investment_lakh,location_Basavanagudi,-3.5634
+investment_lakh,location_Basaveshwara Nagar,0.6505
+investment_lakh,location_Bellandur,-0.1816
+investment_lakh,location_Brigade Road,2.7609
+investment_lakh,location_Brookefield,0.1706
+investment_lakh,location_Domlur,0.0848
+investment_lakh,location_Electronic City,-0.3157
+investment_lakh,location_Frazer Town,-0.226
+investment_lakh,location_HSR,-0.2392
+investment_lakh,location_Indiranagar,3.6964
+investment_lakh,location_JP Nagar,-0.1869
+investment_lakh,location_Jayanagar,-0.0691
+investment_lakh,location_Jeevan Bhima Nagar,-1.0258
+investment_lakh,location_Kalyan Nagar,3.3407
+investment_lakh,location_Kammanahalli,1.3031
+investment_lakh,location_Koramangala 1st Block,-0.0534
+investment_lakh,location_Koramangala 4th Block,7.3134
+investment_lakh,location_Koramangala 5th Block,3.4024
+investment_lakh,location_Koramangala 6th Block,2.6183
+investment_lakh,location_Koramangala 7th Block,4.4028
+investment_lakh,location_Kumaraswamy Layout,-5.9286
+investment_lakh,location_MG Road,18.3516
+investment_lakh,location_Majestic,0.123
+investment_lakh,location_Malleshwaram,-0.0922
+investment_lakh,location_Marathahalli,-0.3861
+investment_lakh,location_Nagawara,-0.2853
+investment_lakh,location_New BEL Road,-0.4004
+investment_lakh,location_Old Airport Road,1.8727
+investment_lakh,location_Other,-0.3101
+investment_lakh,location_Rajajinagar,-0.3244
+investment_lakh,location_Residency Road,7.57
+investment_lakh,location_Richmond Road,6.3652
+investment_lakh,location_Sarjapur Road,-0.3797
+investment_lakh,location_Ulsoor,3.5563
+investment_lakh,location_Whitefield,3.7079
+investment_lakh,location_Yeshwantpur,-0.1427
+investment_lakh,primary_type_Bar,33.0658
+investment_lakh,primary_type_Beverage Shop,-6.0561
+investment_lakh,primary_type_Cafe,7.0817
+investment_lakh,primary_type_Casual Dining,22.2
+investment_lakh,primary_type_Delivery,-7.926
+investment_lakh,primary_type_Dessert Parlor,-2.8962
+investment_lakh,primary_type_Food Court,-6.4629
+investment_lakh,primary_type_Other,6.8417
+investment_lakh,primary_type_Quick Bites,-2.9449
+investment_lakh,primary_type_Sweet Shop,-2.7946
+investment_lakh,primary_type_Takeaway,-6.9776
+investment_lakh,book_table_Yes,5.189
+investment_lakh,has_bar_Yes,19.1563
+investment_lakh,takeover_Yes,-5.8745
+investment_lakh,n_cuisines,1.5343
+investment_lakh,cost_for_two,0.0151
+investment_lakh,guests_per_day,0.0575
+food_cost_pct,intercept,30.8921
+food_cost_pct,c_North_Indian_Yes,1.0075
+food_cost_pct,c_Chinese_Yes,-1.1116
+food_cost_pct,c_South_Indian_Yes,-1.9242
+food_cost_pct,c_Fast_Food_Yes,0.1204
+food_cost_pct,c_Biryani_Yes,2.0458
+food_cost_pct,c_Desserts_Yes,-0.9415
+food_cost_pct,c_Beverages_Yes,-4.033
+food_cost_pct,c_Continental_Yes,2.0747
+food_cost_pct,c_Cafe_Yes,-3.0408
+food_cost_pct,c_Street_Food_Yes,-1.001
+food_cost_pct,c_Italian_Yes,2.0715
+food_cost_pct,c_Bakery_Yes,-2.0891
+food_cost_pct,cost_for_two,-0.002
+food_cost_pct,menu_items,0.0423
+food_cost_pct,alcohol_share,-0.1532
+revenue_lakh,intercept,-3.9088
+revenue_lakh,location_Banashankari,-0.1979
+revenue_lakh,location_Banaswadi,-0.0899
+revenue_lakh,location_Bannerghatta Road,-0.0693
+revenue_lakh,location_Basavanagudi,-0.6652
+revenue_lakh,location_Basaveshwara Nagar,0.2078
+revenue_lakh,location_Bellandur,-0.0907
+revenue_lakh,location_Brigade Road,0.2689
+revenue_lakh,location_Brookefield,-0.1235
+revenue_lakh,location_Domlur,0.0527
+revenue_lakh,location_Electronic City,-0.0601
+revenue_lakh,location_Frazer Town,-0.2454
+revenue_lakh,location_HSR,-0.154
+revenue_lakh,location_Indiranagar,0.544
+revenue_lakh,location_JP Nagar,-0.0719
+revenue_lakh,location_Jayanagar,-0.0897
+revenue_lakh,location_Jeevan Bhima Nagar,-0.1472
+revenue_lakh,location_Kalyan Nagar,0.192
+revenue_lakh,location_Kammanahalli,-0.0593
+revenue_lakh,location_Koramangala 1st Block,0.0675
+revenue_lakh,location_Koramangala 4th Block,0.9538
+revenue_lakh,location_Koramangala 5th Block,0.4143
+revenue_lakh,location_Koramangala 6th Block,0.5068
+revenue_lakh,location_Koramangala 7th Block,0.4927
+revenue_lakh,location_Kumaraswamy Layout,-0.5861
+revenue_lakh,location_MG Road,2.304
+revenue_lakh,location_Majestic,0.0283
+revenue_lakh,location_Malleshwaram,-0.0167
+revenue_lakh,location_Marathahalli,-0.1101
+revenue_lakh,location_Nagawara,-0.1327
+revenue_lakh,location_New BEL Road,-0.2226
+revenue_lakh,location_Old Airport Road,0.0141
+revenue_lakh,location_Other,-0.0888
+revenue_lakh,location_Rajajinagar,0.0613
+revenue_lakh,location_Residency Road,0.9532
+revenue_lakh,location_Richmond Road,0.9252
+revenue_lakh,location_Sarjapur Road,-0.1252
+revenue_lakh,location_Ulsoor,0.5147
+revenue_lakh,location_Whitefield,0.4835
+revenue_lakh,location_Yeshwantpur,-0.0549
+revenue_lakh,primary_type_Bar,2.6957
+revenue_lakh,primary_type_Beverage Shop,-0.0052
+revenue_lakh,primary_type_Cafe,0.9026
+revenue_lakh,primary_type_Casual Dining,1.7914
+revenue_lakh,primary_type_Delivery,-0.1421
+revenue_lakh,primary_type_Dessert Parlor,-0.1032
+revenue_lakh,primary_type_Food Court,-0.187
+revenue_lakh,primary_type_Other,1.759
+revenue_lakh,primary_type_Quick Bites,-0.1339
+revenue_lakh,primary_type_Sweet Shop,-0.1811
+revenue_lakh,primary_type_Takeaway,-0.1059
+revenue_lakh,has_bar_Yes,1.9706
+revenue_lakh,cost_for_two,0.0061
+revenue_lakh,guests_per_day,0.0299
+revenue_lakh,delivery_share,0.03
+revenue_lakh,opening_hours,0.2609

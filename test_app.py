@@ -2,13 +2,17 @@
 
 Run:  python test_app.py      (or: pytest test_app.py)
 """
+import os
 from pathlib import Path
 
 import pandas as pd
 from streamlit.testing.v1 import AppTest
 
-import app
-from predict import CUISINE_FLAGS
+os.environ["PLANNER_NO_LLM"] = "1"  # the Plan chat uses its rule-based reader in tests: no Gemini calls
+
+import app  # noqa: E402
+from plan_predict import predict as plan_predict  # noqa: E402  (app puts planner/ on the path)
+from predict import CUISINE_FLAGS  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 APP_FILE = str(HERE / "app.py")
@@ -118,9 +122,71 @@ def test_wizard_blocks_missing_location():
     assert at.session_state["step"] == 1 and at.error, "step 1 must not advance without a location"
 
 
+def html_text(at: AppTest) -> str:
+    return " ".join(h.proto.body for h in at.html)
+
+
+def test_plan_needs_a_selected_card():
+    _, t03 = reference_concepts()[2]
+    at = run_page("compare", t03, [{"changes": {"book_table": "No"}}])
+    assert [b for b in at.button if b.label == "Select a card to continue"][0].disabled
+    at.button(key="choose_1").click().run()
+    assert at.session_state["plan_pick"] == 1 and "Selected" in html_text(at)
+    at.button(key="plan_go").click().run()
+    assert at.session_state["page"] == "plan" and not at.exception
+    plan = at.session_state["plan"]
+    assert plan["label"] == "No table booking (What-if B)" and plan["concept"]["book_table"] == "No"
+    assert "Plan my restaurant" in html_text(at)
+
+
+def test_plan_empty_state():
+    at = run_page("plan", reference_concepts()[2][1])
+    assert "Plan your opening" in html_text(at) and not at.exception
+    assert [b for b in at.button if b.label == "Go to Compare →"]
+
+
+def test_plan_chat_flow_and_summary():
+    _, t03 = reference_concepts()[2]
+    at = run_page("compare", t03)
+    at.button(key="choose_0").click().run()
+    at.button(key="plan_go").click().run()
+    at.chat_input(key="plan_input").set_value("I have an investment of 1 Cr, and a staff of 20 members").run()
+    chat = at.session_state["plan"]["chat"]
+    assert chat["awaiting_objective"] and "Budget: ₹100 lakh" in html_text(at)        # facts, then the objective
+    at.button_group(key=f"obj_{len(chat['history'])}").set_value("investment_lakh").run()
+    for reply in ("150", "No"):                                                      # quick-reply chips
+        chat = at.session_state["plan"]["chat"]
+        at.button_group(key=f"qr_{len(chat['history'])}").set_value(reply).run()
+    chat = at.session_state["plan"]["chat"]
+    expected = plan_predict("investment_lakh", chat["inputs"])["value"]
+    text = html_text(at)
+    assert f"≈ ₹{expected:,.1f} lakh" in text and "to spare" in text and "synthetic" in text
+    assert chat["answers"]["investment_lakh"]["value"] == expected and not at.exception
+    [b for b in at.button if b.label.startswith("📄 View my plan")][0].click().run()
+    summary = html_text(at)
+    assert at.session_state["page"] == "summary" and "Your facts: budget ₹100 lakh · 20 staff" in summary
+    assert "My opening plan · Your concept (Base)" in summary and f"₹{expected:,.1f} lakh" in summary
+
+
+def test_plan_switch_asks_first():
+    _, t03 = reference_concepts()[2]
+    at = run_page("compare", t03, [{"changes": {"book_table": "No"}}])
+    at.button(key="choose_0").click().run()
+    at.button(key="plan_go").click().run()
+    at.chat_input(key="plan_input").set_value("How many staff do I need?").run()      # the plan now has history
+    at.session_state["page"] = "compare"
+    at.run()
+    at.button(key="choose_1").click().run()
+    at.button(key="plan_go").click().run()
+    assert at.session_state["plan_switch"]["label"] == "No table booking (What-if B)"
+    assert at.session_state["plan"]["label"] == "Your concept (Base)" and not at.exception  # nothing cleared yet
+
+
 if __name__ == "__main__":
     tests = [test_results_match_reference, test_verdict_rules, test_step_errors, test_cuisine_total_follows_chips,
-             test_pages_render, test_whatif_form_multiple_changes, test_wizard_blocks_missing_location]
+             test_pages_render, test_whatif_form_multiple_changes, test_wizard_blocks_missing_location,
+             test_plan_needs_a_selected_card, test_plan_empty_state, test_plan_chat_flow_and_summary,
+             test_plan_switch_asks_first]
     for test in tests:
         test()
         print(f"✔ {test.__name__}")

@@ -4,15 +4,29 @@ A 4-step wizard (Where → Format → Menu → Price) feeds the two trained mode
 predict.py; the app adds no model logic of its own. Results, what-if comparison,
 a take-away summary and an About page follow. No login, nothing stored on a server.
 
+Plan: pick a card in Compare → "Plan this concept" → a chat answers opening questions (size, staff,
+investment, food cost, revenue, break-even) from the planner models in planner/ (SYNTHETIC data,
+labelled as such). Gemini, if a key is set (GEMINI_API_KEY in Streamlit secrets), only reads the
+user's message; every number comes from the models.
+
 Run locally:  streamlit run app.py
-Design: design/stitch_DESIGN.md (Stitch export), Zomato-style red; not affiliated with Zomato.
+Design: design/stitch_DESIGN.md and design/plan_export/ (Stitch exports), Zomato-style red; not affiliated with Zomato.
 """
 import datetime as dt
 import html
+import os
+import re
+import sys
+from pathlib import Path
 
 import streamlit as st
 
 from predict import ALLOWED, CUISINE_FLAGS, RANGES, predict_price, predict_rating, validate_inputs
+
+sys.path.insert(0, str(Path(__file__).resolve().parent / "planner"))
+from chat_engine import (OBJECTIVES, USER_FACTS, choose_objective, fmt_range, fmt_value,  # noqa: E402
+                         gemini_reader, new_state as new_chat, respond, typical)
+from plan_predict import ASSUMPTIONS, EXTRA_INPUTS, TARGETS  # noqa: E402
 
 PRICE_BAND = 136            # ± typical error of the price model: Random Forest 10-fold CV MAE ₹136.4
 STRONG, MODERATE = 0.60, 0.30   # rating verdicts, same thresholds as the workbook's 'Reference Tests' sheet
@@ -48,6 +62,14 @@ KEEP_IN_MIND = [
     "Shows patterns in existing restaurants, not cause and effect.",
 ]
 FOOTER = "Estimates, not guarantees · Trained on 9,244 Bangalore restaurants · Not affiliated with Zomato"
+PLAN_ICON = {"floor_area_sqft": "📐", "staff_count": "👥", "investment_lakh": "💰", "food_cost_pct": "🥘",
+             "revenue_lakh": "📈", "break_even": "⏱️", "all": "📋"}
+QUICK_REPLIES = {  # tap-to-answer chips for the chat's follow-up questions (typing also works)
+    "guests_per_day": ["80", "120", "150", "200"], "opening_hours": ["10", "12", "14", "16"],
+    "delivery_share": ["0%", "20%", "40%", "60%"], "menu_items": ["25", "45", "70", "100"],
+    "alcohol_share": ["15%", "30%", "45%"], "takeover": ["Yes", "No"],
+}
+SYNTHETIC_LINE = "Estimate from synthetic planning data (Linear Regression)"
 
 
 # ---------------------------------------------------------------- logic (no Streamlit calls)
@@ -221,13 +243,15 @@ def rating_card(res: dict) -> str:
     </div>""")
 
 
-def scenario_card(sc: dict) -> str:
+def scenario_card(sc: dict, selection: str = "") -> str:
+    """selection: "" (nothing picked yet), "selected" or "faded" (another card is picked)."""
     res = sc["result"]
     label, tone, _ = res["price_verdict"]
     r_label, r_tone, _ = res["rating_verdict"]
+    tags = (badge(sc['tag'], "red") if sc['tag'] else "") + (badge("Selected", "red") if selection == "selected" else "")
     return clean(f"""
-    <div class="sc-swipe-card">
-      <div class="sc-card-head"><span class="sc-h3">{html.escape(sc['title'])}</span>{badge(sc['tag'], "red") if sc['tag'] else ""}</div>
+    <div class="sc-card-body {'sc-faded' if selection == 'faded' else ''}">
+      <div class="sc-card-head"><span class="sc-h3">{html.escape(sc['title'])} {tags}</span></div>
       <div class="sc-kv"><span>Market price</span><b>{rupees(res['price'])}</b></div>
       <div class="sc-kv sc-muted"><span>Typical range</span><span>{rupees(res['low'])} – {rupees(res['high'])}</span></div>
       <div class="sc-kv"><span>Your price</span><b>{rupees(res['cost'])}</b></div>
@@ -254,7 +278,41 @@ def scenarios(concept: dict, whatifs: list[dict]) -> list[dict]:
     return out
 
 
-def summary_html(concept: dict, whatifs: list[dict]) -> str:
+def scenario_label(rows: list[dict], i: int) -> str:
+    return f"{rows[i]['title']} ({'Base' if i == 0 else f'What-if {chr(65 + i)}'})"
+
+
+def facts_text(inputs: dict) -> str:
+    parts = []
+    if inputs.get("budget_lakh"):
+        parts.append(f"budget ₹{inputs['budget_lakh']:g} lakh")
+    if inputs.get("staff_available"):
+        parts.append(f"{inputs['staff_available']:g} staff")
+    return " · ".join(parts)
+
+
+def plan_summary_html(plan: dict | None) -> str:
+    """The 'My opening plan' section: every answered estimate, the user's stated facts and the data note."""
+    answers = plan["chat"]["answers"] if plan else {}
+    if not answers:
+        return ""
+    rows = "".join(f"<tr><td>{PLAN_ICON[t]} {html.escape(TARGETS[t]['label'])}</td><td><b>≈ {fmt_value(t, answers[t]['value'])}</b>"
+                   f" <span class='sc-small'>({fmt_range(t, answers[t]['low'], answers[t]['high'])})</span></td></tr>"
+                   for t in TARGETS if t in answers)
+    if "break_even" in answers:
+        months = answers["break_even"]["months"]
+        rows += (f"<tr><td>⏱️ Break-even</td><td><b>{f'≈ {months:.0f} months' if months else 'Not reached'}</b>"
+                 f" <span class='sc-small'>(formula on the estimates above)</span></td></tr>")
+    facts = facts_text(plan["chat"]["inputs"])
+    return clean(f"""
+      <h3>📋 My opening plan · {html.escape(plan['label'])}</h3>
+      {f'<p class="sc-small">Your facts: {html.escape(facts)}</p>' if facts else ''}
+      <table>{rows}</table>
+      <p class="sc-small">Plan estimates come from synthetic planning data (Linear Regression); price and rating
+      come from 9,244 real Zomato Bangalore restaurants.</p>""")
+
+
+def summary_html(concept: dict, whatifs: list[dict], plan: dict | None = None) -> str:
     rows = scenarios(concept, whatifs)
     res = rows[0]["result"]
     cuisines = ", ".join(cuisine_name(c) for c in concept["cuisines"]) or "none of the 12 listed"
@@ -278,9 +336,109 @@ def summary_html(concept: dict, whatifs: list[dict]) -> str:
       <b>{res['price_verdict'][0]}</b>.<br>Chance of a 4.0+ rating <b>{res['prob']:.0%}</b> – <b>{res['rating_verdict'][0]}</b>.</p>
       <h3>What-ifs</h3>
       <table><tr><th>Scenario</th><th>Market price</th><th>Price verdict</th><th>4.0+ chance</th></tr>{whatif_rows}</table>
+      {plan_summary_html(plan)}
       <h3>Keep in mind</h3><ul>{keep}</ul>
       <p class="sc-small">Data: 'Zomato Bangalore Restaurants' by Himanshu Poddar, Kaggle (about 2019).
       Models: Random Forest (price), Logistic Regression (rating). SpotCheck – MICA ML Capstone. Not affiliated with Zomato.</p>
+    </div>""")
+
+
+# ---------------------------------------------------------------- Plan chat pieces
+def md_inline(text: str) -> str:
+    """The chat engine's tiny markdown (**bold**, _italic_, line breaks) → safe HTML."""
+    out = html.escape(text)
+    out = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", out)
+    out = re.sub(r"(?<![\w])_(.+?)_(?![\w])", r"<i>\1</i>", out)
+    return out.replace("\n\n", "<br><br>")
+
+
+def input_text(field: str, value) -> str:
+    """'150 guests/day' style text for a planner input the user gave."""
+    unit = {"guests_per_day": " guests/day", "opening_hours": " h/day", "delivery_share": "% delivery",
+            "menu_items": " menu items", "alcohol_share": "% alcohol sales"}.get(field)
+    if field == "takeover":
+        return "Taking over a site" if value == "Yes" else "New fit-out"
+    return f"{value:g}{unit}"
+
+
+def bubble(role: str, body: str, extra: str = "") -> str:
+    if role == "user":
+        return f'<div class="sc-msg sc-msg-user"><div class="sc-bubble-user">{body}</div>{extra}</div>'
+    return f'<div class="sc-msg"><span class="sc-avatar">🍽️</span><div class="sc-bubble-bot">{body}</div></div>{extra}'
+
+
+def mini_range(low: float, value: float, high: float, target: str) -> str:
+    return clean(f"""<div class="sc-mini-range"><div class="sc-mini-track"><div class="sc-mini-dot"></div></div>
+        <div class="sc-kv sc-small" style="border:0;padding:2px 0"><span>{fmt_value(target, low)}</span>
+        <span>{fmt_value(target, high)}</span></div></div>""")
+
+
+def answer_card(target: str, data: dict, concept: dict) -> str:
+    """Stitch 'answer card': big estimate, range, comparison with the user's facts, inputs used, data label."""
+    if target == "all":
+        return full_plan_card(data, concept)
+    if target == "break_even":
+        return break_even_card(data)
+    note = data.get("note")
+    note_html = ""
+    if note:
+        good = "covers" in note or "more than needed" in note or "exactly" in note
+        note_html = f'<div class="sc-verdict" style="background:{TONES["green" if good else "amber"][0]}">{"✓" if good else "⚠️"} {html.escape(note)}</div>'
+    based = [concept["primary_type"], concept["location"], f"{rupees(concept['cost_for_two'])} for two"]
+    based += [input_text(f, v) for f, v in data["based_on"].items()]
+    return clean(f"""
+    <div class="sc-answer">
+      <div class="sc-card-head"><span class="sc-h3">{PLAN_ICON[target]} {html.escape(TARGETS[target]['label'])}</span></div>
+      <div class="sc-answer-big">≈ {fmt_value(target, data['value'])}</div>
+      {mini_range(data['low'], data['value'], data['high'], target)}
+      {note_html}
+      <div class="sc-small" style="margin-top:10px">Based on</div>{chips(based)}
+      <div class="sc-small"><i>{SYNTHETIC_LINE}</i></div>
+    </div>""")
+
+
+def break_even_card(b: dict) -> str:
+    c, months = b["costs"], b["months"]
+    lakh = lambda x: f"₹{x / 100_000:,.1f} lakh"
+    rows = "".join(f'<div class="sc-kv"><span>− {name}</span><span>{lakh(c[key])}</span></div>'
+                   for key, name in (("food", "Food"), ("staff", "Staff"), ("rent", "Rent"), ("other", "Other costs")))
+    assumptions = (f"₹{ASSUMPTIONS['salary_per_staff']:,} per staff member a month; rent ₹{ASSUMPTIONS['base_rent_per_sqft']}"
+                   f"/sq ft in a typical area, adjusted by the area's price level; other costs {ASSUMPTIONS['other_costs_pct']}% of sales.")
+    if months:
+        head = f'<div class="sc-answer-big">≈ {months:.0f} months</div><div class="sc-small">to earn back the investment</div>'
+        tail = f'<div class="sc-inset sc-small">Investment {lakh(b["investment"] * 100_000)} ÷ profit {lakh(b["profit"])} a month = ≈ {months:.0f} months</div>'
+        cls = "sc-answer"
+    else:
+        head = '<div class="sc-answer-big" style="color:#A86A00">Not reached</div>'
+        tail = ('<div class="sc-verdict" style="background:#FEF8EC">⚠️ Monthly costs exceed sales under these assumptions. '
+                'Try a higher price or fewer staff in Compare.</div>')
+        cls = "sc-answer sc-answer-warn"
+    return clean(f"""
+    <div class="{cls}">
+      <div class="sc-card-head"><span class="sc-h3">⏱️ Break-even</span></div>
+      {head}
+      <div class="sc-inset"><div class="sc-kv"><span>Sales</span><b>{lakh(b['revenue'])}</b></div>{rows}
+        <div class="sc-kv" style="border:0"><b>= Profit</b><b>{lakh(b['profit'])} / month</b></div></div>
+      {tail}
+      <details class="sc-details"><summary>Assumptions (not models)</summary><div class="sc-small">{assumptions}</div></details>
+      <div class="sc-small"><i>{SYNTHETIC_LINE}; break-even is a formula on those estimates</i></div>
+    </div>""")
+
+
+def full_plan_card(data: dict, concept: dict) -> str:
+    tiles = "".join(f'<div class="sc-tile"><div class="sc-small">{PLAN_ICON[t]} {html.escape(TARGETS[t]["label"])}</div>'
+                    f'<b>≈ {fmt_value(t, d["value"])}</b><div class="sc-small">{fmt_range(t, d["low"], d["high"])}</div></div>'
+                    for t, d in data["targets"].items())
+    months = data["break_even"]["months"]
+    tiles += (f'<div class="sc-tile sc-tile-wide"><div class="sc-small">⏱️ Break-even</div>'
+              f'<b>{f"≈ {months:.0f} months" if months else "Not reached"}</b></div>')
+    notes = "".join(f'<div class="sc-small" style="margin-top:6px">• {html.escape(d["note"])}</div>'
+                    for d in data["targets"].values() if d.get("note"))
+    return clean(f"""
+    <div class="sc-answer">
+      <div class="sc-card-head"><span class="sc-h3">📋 Opening plan</span></div>
+      <div class="sc-tiles">{tiles}</div>{notes}
+      <div class="sc-small" style="margin-top:8px"><i>{SYNTHETIC_LINE}</i></div>
     </div>""")
 
 
@@ -349,7 +507,49 @@ header[data-testid="stHeader"] {display: none;}
 .st-key-bottomnav {position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px;
   background: #fff; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); z-index: 1000;}
 .st-key-bottomnav [data-testid="stButtonGroup"] {width: 100%;}
-.st-key-bottomnav [data-testid="stButtonGroup"] button {flex: 1 1 0; min-width: 0; padding: 6px 2px; font-size: 0.8rem;}
+.st-key-bottomnav [data-testid="stButtonGroup"] button {flex: 1 1 0; min-width: 0; padding: 4px 2px; font-size: 0.72rem; line-height: 1.15;}
+.st-key-bottomnav [data-testid="stButtonGroup"] button [data-has-shortcut] {flex-direction: column; gap: 1px;}  /* icon above label */
+.st-key-bottomnav [data-testid="stButtonGroup"] button p {white-space: nowrap; overflow: visible; text-overflow: clip;}
+.st-key-cardrow {flex-wrap: nowrap !important; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px !important;
+  padding: 4px 2px 10px; -webkit-overflow-scrolling: touch;}
+[class*="st-key-card_"] {flex: 0 0 84% !important; min-width: 84%; scroll-snap-align: start; position: relative; background: #fff;
+  border: 1px solid #E8E8E8; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(28,28,28,0.04); gap: 8px !important;}
+[class*="st-key-card_"][class*="_sel"] {border: 2px solid #E23744; box-shadow: 0 4px 16px rgba(226,55,68,0.18);}
+[class*="st-key-pick_"] {position: absolute; top: 12px; right: 12px; width: auto !important; z-index: 2;}
+[class*="st-key-pick_"] button {width: 30px; height: 30px; min-height: 30px !important; padding: 0; border-radius: 50%;
+  border: 2px solid #D0C4C3; background: #fff; color: transparent; font-weight: 800;}
+[class*="st-key-pick_"][class*="_on"] button {background: #E23744; border-color: #E23744; color: #fff;}
+.sc-card-body .sc-card-head {padding-right: 36px;}
+.sc-faded {opacity: 0.8;}
+.st-key-plancta {position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px;
+  padding: 10px 16px 6px; z-index: 900; background: linear-gradient(rgba(248,248,248,0), #F8F8F8 35%);}
+.block-container:has(.st-key-plancta) {padding-bottom: 10rem;}
+.sc-empty {text-align: center; padding: 26px 18px;}
+.sc-empty-icon {font-size: 3rem; background: #F6F3F2; border-radius: 50%; width: 96px; height: 96px; display: inline-flex;
+  align-items: center; justify-content: center; margin-bottom: 10px;}
+.sc-strip {background: #fff; border: 1px solid #E8E8E8; border-radius: 16px; padding: 12px 14px; margin-bottom: 8px;}
+.sc-banner {background: #EFF6FF; color: #1E3A8A; border-radius: 12px; padding: 10px 12px; font-size: 0.82rem; margin-bottom: 10px;}
+.sc-msg {display: flex; gap: 8px; align-items: flex-start; margin: 10px 0;}
+.sc-msg-user {flex-direction: column; align-items: flex-end;}
+.sc-avatar {flex: 0 0 30px; height: 30px; border-radius: 50%; background: #E23744; display: inline-flex;
+  align-items: center; justify-content: center; font-size: 0.9rem;}
+.sc-bubble-bot {background: #EFEDED; border-radius: 4px 16px 16px 16px; padding: 10px 13px; font-size: 0.9rem; max-width: 86%;}
+.sc-bubble-user {background: #E23744; color: #fff; border-radius: 16px 4px 16px 16px; padding: 10px 13px; font-size: 0.9rem; max-width: 86%;}
+.sc-qnum {display: block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; color: #696969; margin-bottom: 3px;}
+.sc-facts {display: flex; gap: 6px; margin-top: 4px;}
+.sc-fact {background: #EFEDED; border-radius: 9999px; padding: 2px 9px; font-size: 0.72rem; font-weight: 600;}
+.sc-answer {background: #fff; border: 1px solid #E8E8E8; border-left: 4px solid #E23744; border-radius: 16px; padding: 14px;
+  margin: 6px 0 6px 38px; box-shadow: 0 2px 8px rgba(28,28,28,0.05);}
+.sc-answer-warn {border-left-color: #F9A825;}
+.sc-answer-big {font-size: 1.9rem; font-weight: 800; color: #E23744; letter-spacing: -0.02em;}
+.sc-mini-range {margin: 8px 0 2px;}
+.sc-mini-track {position: relative; height: 8px; background: #FFB3B1; border-radius: 9999px;}
+.sc-mini-dot {position: absolute; left: 50%; top: -4px; width: 16px; height: 16px; margin-left: -8px; background: #E23744;
+  border: 3px solid #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,.25);}
+.sc-tiles {display: grid; grid-template-columns: 1fr 1fr; gap: 8px;}
+.sc-tile {background: #F6F3F2; border-radius: 12px; padding: 10px;}
+.sc-tile-wide {grid-column: 1 / -1;}
+.st-key-planchat [data-testid="stChatInput"] {margin-top: 8px;}
 </style>
 """
 
@@ -596,14 +796,29 @@ def whatif_form(c: dict, whatifs: list[dict]) -> None:
 
 
 def page_compare() -> None:
-    st.html('<div class="sc-h2">What if…?</div><div class="sc-muted">Compare your concept with up to 3 what-ifs. Swipe to see them all.</div>')
+    st.html('<div class="sc-h2">Compare your options</div><div class="sc-muted">Compare your concept with up to 3 what-ifs. '
+            'Pick the version you\'ll open, then plan it.</div>')
     if not st.session_state.assessed:
         st.info("Check a concept first – then try what-ifs here.")
         st.button("Start with my concept →", type="primary", on_click=go, args=("check", 1), width="stretch")
         return
     c, whatifs = st.session_state.concept, st.session_state.whatifs
     rows = scenarios(c, whatifs)
-    st.html('<div class="sc-swipe">' + "".join(scenario_card(sc) for sc in rows) + "</div>")
+    if st.session_state.get("plan_pick") not in range(len(rows)):
+        st.session_state.plan_pick = None  # nothing picked yet, or the picked what-if was removed
+    pick = st.session_state.plan_pick
+    selection = lambda i: "" if pick is None else "selected" if i == pick else "faded"
+    set_pick = lambda i: st.session_state.__setitem__("plan_pick", i)
+    with st.container(key="cardrow", horizontal=True):  # swipeable row of tappable cards
+        for i, sc in enumerate(rows):
+            with st.container(key=f"card_{i}{'_sel' if i == pick else ''}"):
+                st.button("✓", key=f"pick_{i}{'_on' if i == pick else ''}", on_click=set_pick, args=(i,),
+                          help="Choose this concept")
+                st.html(scenario_card(sc, selection(i)))
+                st.button("✓ Selected" if i == pick else "Choose this one", key=f"choose_{i}", on_click=set_pick,
+                          args=(i,), type="primary" if i == pick else "secondary", width="stretch")
+    if st.session_state.get("plan_switch"):
+        switch_plan_dialog()
     if len(rows) > 1:
         st.caption("Swipe sideways to see every card. Tap “All settings” on a card to see its full setup.")
         with st.container(horizontal=True):
@@ -619,8 +834,145 @@ def page_compare() -> None:
     st.html(clean("""<div class="sc-note">💡 <b>Why can a higher price raise the rating chance?</b> In the data, pricier
         restaurants tend to be rated higher. That's a pattern, not a promise – raising your price alone won't improve
         your rating.</div>"""))
-    st.button("📄 Get my summary", type="primary", on_click=go, args=("summary",), width="stretch")
+    st.button("📄 Get my summary", on_click=go, args=("summary",), width="stretch")
     st.button("← Back to results", on_click=go, args=("results",), width="stretch")
+    with st.container(key="plancta"):
+        if pick is None:
+            st.button("Select a card to continue", disabled=True, width="stretch", key="plan_go_off")
+        else:
+            st.button("Plan this concept →", type="primary", width="stretch", key="plan_go",
+                      on_click=plan_this, args=(scenario_label(rows, pick), rows[pick]["concept"]))
+
+
+# ---------------------------------------------------------------- Plan
+def plan_this(label: str, concept: dict) -> None:
+    """'Plan this concept': open the Plan chat for the picked card (asks first if it would clear a plan)."""
+    current = st.session_state.get("plan")
+    if current and current["concept"] == concept:
+        current["label"] = label
+    elif current and current["chat"]["history"]:
+        st.session_state.plan_switch = {"label": label, "concept": concept}
+        return
+    else:
+        start_plan(label, concept)
+    go("plan")
+
+
+def start_plan(label: str, concept: dict) -> None:
+    st.session_state.plan = {"label": label, "concept": dict(concept), "chat": new_chat(to_inputs(concept))}
+
+
+@st.dialog("Start a new plan?")
+def switch_plan_dialog() -> None:
+    switch, current = st.session_state.plan_switch, st.session_state.plan
+    st.write("You picked a different concept. Your current plan answers will be cleared.")
+    st.html(clean(f"""<div class="sc-inset sc-small"><b>From:</b> {html.escape(current['label'])}<br>↓<br>
+        <b>To:</b> {html.escape(switch['label'])}</div>"""))
+    if st.button("Start new plan", type="primary", width="stretch"):
+        start_plan(switch["label"], switch["concept"])
+        del st.session_state.plan_switch
+        go("plan")
+        st.rerun()
+    if st.button("Keep current plan", type="tertiary", width="stretch"):
+        del st.session_state.plan_switch
+        st.rerun()
+
+
+def gemini() -> object | None:
+    """Gemini message reader if a key is configured (and not switched off for tests), else None (rules)."""
+    if os.environ.get("PLANNER_NO_LLM"):
+        return None
+    try:
+        key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
+        model = st.secrets.get("GEMINI_MODEL") or "gemini-3.5-flash-lite"
+    except Exception:  # noqa: BLE001 – no secrets file
+        key, model = os.environ.get("GEMINI_API_KEY"), "gemini-3.5-flash-lite"
+    return gemini_reader(key, model) if key else None
+
+
+def send(text: str) -> None:
+    with st.spinner("SpotCheck is reading your message…"):
+        respond(st.session_state.plan["chat"], text, gemini())
+
+
+def page_plan() -> None:
+    plan = st.session_state.get("plan")
+    if not plan:
+        st.html(clean("""<div class="sc-card sc-empty"><div class="sc-empty-icon">📋</div>
+            <div class="sc-h2">Plan your opening</div>
+            <p class="sc-muted">First choose the concept you'll open in <b>Compare</b>. Then ask me about space, staff,
+            money, food cost, revenue and break-even.</p></div>"""))
+        if st.session_state.assessed:
+            st.button("Go to Compare →", type="primary", on_click=go, args=("compare",), width="stretch")
+        else:
+            st.button("Start with my concept →", type="primary", on_click=go, args=("check", 1), width="stretch")
+        st.caption("Plan estimates come from synthetic planning data.")
+        return
+
+    c, chat = plan["concept"], plan["chat"]
+    st.button("‹ Compare", on_click=go, args=("compare",), type="tertiary")
+    st.html('<div class="sc-h2">Plan my restaurant</div>')
+    services = [l for f, _, l, _ in SERVICES if c[f] == "Yes"]
+    st.html(clean(f"""<div class="sc-strip"><div class="sc-card-head" style="margin:0">
+        <b>{TYPE_EMOJI[c['primary_type']]} {html.escape(c['primary_type'])} · 📍 {html.escape(c['location'])}</b>
+        <span class="sc-small">{html.escape(plan['label'])}</span></div>
+        <div class="sc-muted">{rupees(c['cost_for_two'])} for two</div>
+        {chips(services + [f"{c['n_cuisines']} cuisines"])}</div>"""))
+    st.button("↺ Change concept", on_click=go, args=("compare",), type="tertiary")
+    st.html('<div class="sc-banner">ℹ️ Estimates from <b>synthetic planning data</b>, not real Bangalore figures.</div>')
+    with st.expander("Why synthetic?"):
+        st.caption("Size, staff, money, food cost and revenue aren't in the Zomato data. These five estimates come from "
+                   "Linear Regression models trained on generated data built from industry-style assumptions, so they "
+                   "show how a plan could look, not facts. Price and rating still come from 9,244 real restaurants. "
+                   + ("Your messages are read by Google Gemini only to understand the question; every number comes from "
+                      "SpotCheck's models." if gemini() else "Messages are read by SpotCheck's built-in rules (no AI)."))
+
+    parts = [bubble("bot", md_inline(f"Hi! Ask me anything about opening this {c['primary_type'].lower()}: size, staff, "
+                                     "money to open, food cost, revenue or break-even. You can also tell me details, "
+                                     "like “we'll be open 12 hours”."))]
+    for msg in chat["history"]:
+        if msg["role"] == "user":
+            facts = "".join(f'<span class="sc-fact">{html.escape(USER_FACTS[f]["label"].capitalize())}: '
+                            f'{"₹" + format(v, "g") + " lakh" if f == "budget_lakh" else format(v, "g")}</span>'
+                            for f, v in msg.get("facts", {}).items())
+            parts.append(bubble("user", html.escape(msg["content"]), f'<div class="sc-facts">{facts}</div>' if facts else ""))
+        elif msg.get("answer"):
+            parts.append(f'<div class="sc-msg"><span class="sc-avatar">🍽️</span><span class="sc-small">Here is your estimate:</span></div>'
+                         + answer_card(msg["answer"], msg["data"], c))
+        else:
+            qnum = (f'<span class="sc-qnum">QUESTION {msg["q_index"]} OF {msg["q_total"]}</span>'
+                    if msg.get("q_index") and msg.get("q_total", 0) > 1 else "")
+            parts.append(bubble("bot", qnum + md_inline(msg["content"])))
+    st.html("".join(parts))
+
+    n = len(chat["history"])
+    with st.container(key="planchat"):
+        if chat["awaiting_objective"]:
+            choice = st.pills("Your objective", list(OBJECTIVES), format_func=OBJECTIVES.get, key=f"obj_{n}")
+            if choice:
+                choose_objective(chat, choice)
+                st.rerun()
+        elif chat["asking"]:
+            field = chat["asking"]
+            options = QUICK_REPLIES[field] + [f"Not sure (use {typical(field)})"]
+            choice = st.pills("Quick replies", options, key=f"qr_{n}", label_visibility="collapsed")
+            if choice:
+                send(choice)
+                st.rerun()
+        elif chat["answers"]:
+            remaining = [o for o in OBJECTIVES if o not in chat["answers"] and o != "all"] + ["all"]
+            choice = st.pills("Ask next", remaining, format_func=OBJECTIVES.get, key=f"next_{n}")
+            if choice:
+                choose_objective(chat, choice)
+                st.rerun()
+            st.button("📄 View my plan in the Summary", on_click=go, args=("summary",), width="stretch")
+        placeholder = ("Type your objective…" if chat["awaiting_objective"] else
+                       "Type your answer or tap a chip…" if chat["asking"] else
+                       "Ask about size, staff, money, food cost…")
+        typed = st.chat_input(placeholder, key="plan_input")
+        if typed:
+            send(typed)
+            st.rerun()
 
 
 def page_summary() -> None:
@@ -628,12 +980,14 @@ def page_summary() -> None:
         st.info("Check a concept first – your summary appears here.")
         st.button("Start with my concept →", type="primary", on_click=go, args=("check", 1), width="stretch")
         return
-    body = summary_html(st.session_state.concept, st.session_state.whatifs)
+    body = summary_html(st.session_state.concept, st.session_state.whatifs, st.session_state.get("plan"))
     st.html(f'<div class="sc-card">{body}</div>')
     document = (f'<!doctype html><html><head><meta charset="utf-8"><title>SpotCheck summary</title>{CSS}</head>'
                 f'<body style="max-width:640px;margin:24px auto;padding:0 16px">{body}</body></html>')
     st.download_button("⬇️ Download summary", document, file_name="spotcheck_summary.html", mime="text/html",
                        type="primary", width="stretch")
+    if st.session_state.get("plan"):
+        st.button("← Back to Plan", on_click=go, args=("plan",), width="stretch")
     st.button("Start a new concept", on_click=reset_all, width="stretch")
 
 
@@ -662,14 +1016,14 @@ def page_about() -> None:
       Not affiliated with Zomato. No sign-up, no data stored.</div>"""))
 
 
-PAGES = {"check": page_check, "results": page_results, "compare": page_compare, "summary": page_summary,
-         "about": page_about}
-NAV = {"predictor": "🍽️ Predictor", "compare": "🔁 Compare", "about": "ℹ️ About"}
+PAGES = {"check": page_check, "results": page_results, "compare": page_compare, "plan": page_plan,
+         "summary": page_summary, "about": page_about}
+NAV = {"predictor": "🍽️ Predictor", "compare": "🔁 Compare", "plan": "💬 Plan", "about": "ℹ️ About"}
 
 
 def bottom_nav() -> None:
     page = st.session_state.page
-    st.session_state.w_nav = "compare" if page == "compare" else "about" if page == "about" else "predictor"
+    st.session_state.w_nav = page if page in ("compare", "plan", "about") else "predictor"
 
     def nav_changed():
         target = st.session_state.w_nav
