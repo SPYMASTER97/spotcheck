@@ -553,10 +553,15 @@ header[data-testid="stHeader"] {display: none;}
 .st-key-bottomnav [data-testid="stButtonGroup"] button [data-has-shortcut] {flex-direction: column; gap: 1px;}  /* icon above label */
 .st-key-bottomnav [data-testid="stButtonGroup"] button p {white-space: nowrap; overflow: visible; text-overflow: clip;}
 .st-key-cardrow {flex-wrap: nowrap !important; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px !important;
-  padding: 4px 2px 10px; -webkit-overflow-scrolling: touch;}
-[class*="st-key-card_"] {flex: 0 0 84% !important; min-width: 84%; scroll-snap-align: start; position: relative; background: #fff;
+  align-items: stretch !important; padding: 4px 2px 12px; -webkit-overflow-scrolling: touch; scrollbar-width: none;}
+.st-key-cardrow > [data-testid="stLayoutWrapper"] {flex: 0 0 86% !important; width: 86% !important; max-width: 86% !important;
+  min-width: 0; display: flex; scroll-snap-align: start;}  /* every card the same width; the next one peeks in */
+[class*="st-key-card_"] {flex: 1 1 auto; width: 100% !important; position: relative; background: #fff;
   border: 1px solid #E8E8E8; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(28,28,28,0.04); gap: 8px !important;}
+[class*="st-key-card_"] > div:last-child {margin-top: auto;}  /* "Choose this one" lines up at the bottom of every card */
 [class*="st-key-card_"][class*="_sel"] {border: 2px solid #E23744; box-shadow: 0 4px 16px rgba(226,55,68,0.18);}
+.sc-card-body .sc-kv span:first-child {white-space: nowrap;}
+.sc-card-body .sc-h3 {display: flex; flex-wrap: wrap; align-items: center; gap: 6px;}
 [class*="st-key-pick_"] {position: absolute; top: 12px; right: 12px; width: auto !important; z-index: 2;}
 [class*="st-key-pick_"] button {width: 30px; height: 30px; min-height: 30px !important; padding: 0; border-radius: 50%;
   border: 2px solid #D0C4C3; background: #fff; color: transparent; font-weight: 800;}
