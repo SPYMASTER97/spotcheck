@@ -301,12 +301,17 @@ def plan_summary_html(plan: dict | None) -> str:
     answers = plan["chat"]["answers"] if plan else {}
     if not answers:
         return ""
-    rows = "".join(f"<tr><td>{PLAN_ICON[t]} {html.escape(TARGETS[t]['label'])}</td><td><b>≈ {fmt_value(t, answers[t]['value'])}</b>"
-                   f" <span class='sc-small'>({fmt_range(t, answers[t]['low'], answers[t]['high'])})</span></td></tr>"
+    rows = "".join(f"<tr><td>{PLAN_ICON[t]} {html.escape(TARGETS[t]['label'])}</td>"
+                   + (f"<td><b>{band_span(t, answers[t])}</b> <span class='sc-small'>(for your range)</span></td></tr>"
+                      if answers[t].get("band") else
+                      f"<td><b>≈ {fmt_value(t, answers[t]['value'])}</b>"
+                      f" <span class='sc-small'>({fmt_range(t, answers[t]['low'], answers[t]['high'])})</span></td></tr>")
                    for t in TARGETS if t in answers)
     if "break_even" in answers:
         months = answers["break_even"]["months"]
-        rows += (f"<tr><td>⏱️ Break-even</td><td><b>{f'≈ {months:.0f} months' if months else 'Not reached'}</b>"
+        shown = (band_span("break_even", answers["break_even"]) if answers["break_even"].get("band")
+                 else f'≈ {months:.0f} months' if months else 'Not reached')
+        rows += (f"<tr><td>⏱️ Break-even</td><td><b>{shown}</b>"
                  f" <span class='sc-small'>(formula on the estimates above)</span></td></tr>")
     facts = facts_text(plan["chat"]["inputs"])
     return clean(f"""
@@ -363,6 +368,8 @@ def input_text(field: str, value) -> str:
             "menu_items": " menu items", "alcohol_share": "% alcohol sales"}.get(field)
     if field == "takeover":
         return "Taking over a site" if value == "Yes" else "New fit-out"
+    if isinstance(value, tuple):  # a range the user gave
+        return f"{value[0]:g}–{value[1]:g}{unit}"
     return f"{value:g}{unit}"
 
 
@@ -378,6 +385,30 @@ def mini_range(low: float, value: float, high: float, target: str) -> str:
         <span>{fmt_value(target, high)}</span></div></div>""")
 
 
+def band_value(target: str, d: dict) -> str:
+    if target == "break_even":
+        return f"≈ {d['months']:.0f} months" if d["months"] else "not reached"
+    return f"≈ {fmt_value(target, d['value'])}"
+
+
+def band_span(target: str, data: dict) -> str:
+    """'≈ ₹47.4–₹53.1 lakh' across a ranged answer's two ends (low end first)."""
+    lo, hi = data["band"]["low"], data["band"]["high"]
+    if target == "break_even":
+        months = sorted(m for m in (lo["months"], hi["months"]) if m)
+        return f"≈ {months[0]:.0f}–{months[-1]:.0f} months" if months else "Not reached"
+    a, b = sorted((lo["value"], hi["value"]))
+    return f"≈ {fmt_range(target, a, b)}"
+
+
+def band_rows(target: str, data: dict) -> str:
+    """'With 100 guests/day → ≈ ₹47.4 lakh' for each end of the user's range(s)."""
+    band = data["band"]
+    side = lambda end: ", ".join(input_text(f, rng[0 if end == "low" else 1]) for f, rng in band["fields"].items())
+    return "".join(f'<div class="sc-kv"><span>With {html.escape(side(end))}</span><b>{band_value(target, band[end])}</b></div>'
+                   for end in ("low", "high"))
+
+
 def answer_card(target: str, data: dict, concept: dict) -> str:
     """Stitch 'answer card': big estimate, range, comparison with the user's facts, inputs used, data label."""
     if target == "all":
@@ -390,12 +421,15 @@ def answer_card(target: str, data: dict, concept: dict) -> str:
         good = "covers" in note or "more than needed" in note or "exactly" in note
         note_html = f'<div class="sc-verdict" style="background:{TONES["green" if good else "amber"][0]}">{"✓" if good else "⚠️"} {html.escape(note)}</div>'
     based = [concept["primary_type"], concept["location"], f"{rupees(concept['cost_for_two'])} for two"]
-    based += [input_text(f, v) for f, v in data["based_on"].items()]
+    ranged = data.get("band", {}).get("fields", {})
+    based += [input_text(f, ranged.get(f, v)) for f, v in data["based_on"].items()]
     return clean(f"""
     <div class="sc-answer">
       <div class="sc-card-head"><span class="sc-h3">{PLAN_ICON[target]} {html.escape(TARGETS[target]['label'])}</span></div>
-      <div class="sc-answer-big">≈ {fmt_value(target, data['value'])}</div>
-      {mini_range(data['low'], data['value'], data['high'], target)}
+      {f'<div class="sc-answer-big">{band_span(target, data)}</div><div class="sc-small">for the range you gave</div>'
+       f'<div class="sc-inset">{band_rows(target, data)}</div>' if data.get("band") else
+       f'<div class="sc-answer-big">≈ {fmt_value(target, data["value"])}</div>'
+       + mini_range(data['low'], data['value'], data['high'], target)}
       {note_html}
       <div class="sc-small" style="margin-top:10px">Based on</div>{chips(based)}
       <div class="sc-small"><i>{SYNTHETIC_LINE}</i></div>
@@ -425,6 +459,8 @@ def break_even_card(b: dict) -> str:
       <div class="sc-inset"><div class="sc-kv"><span>Sales</span><b>{lakh(b['revenue'])}</b></div>{rows}
         <div class="sc-kv" style="border:0"><b>= Profit</b><b>{lakh(b['profit'])} / month</b></div></div>
       {tail}
+      {f'<div class="sc-small" style="margin-top:8px">For the range you gave: {band_span("break_even", b)}</div>'
+       f'<div class="sc-inset">{band_rows("break_even", b)}</div>' if b.get("band") else ""}
       <details class="sc-details"><summary>Assumptions (not models)</summary><div class="sc-small">{assumptions}</div></details>
       <div class="sc-small"><i>{SYNTHETIC_LINE}; break-even is a formula on those estimates</i></div>
     </div>""")
@@ -432,11 +468,12 @@ def break_even_card(b: dict) -> str:
 
 def full_plan_card(data: dict, concept: dict) -> str:
     tiles = "".join(f'<div class="sc-tile"><div class="sc-small">{PLAN_ICON[t]} {html.escape(TARGETS[t]["label"])}</div>'
-                    f'<b>≈ {fmt_value(t, d["value"])}</b><div class="sc-small">{fmt_range(t, d["low"], d["high"])}</div></div>'
+                    + (f'<b>{band_span(t, d)}</b><div class="sc-small">for your range</div></div>' if d.get("band") else
+                       f'<b>≈ {fmt_value(t, d["value"])}</b><div class="sc-small">{fmt_range(t, d["low"], d["high"])}</div></div>')
                     for t, d in data["targets"].items())
     months = data["break_even"]["months"]
     tiles += (f'<div class="sc-tile sc-tile-wide"><div class="sc-small">⏱️ Break-even</div>'
-              f'<b>{f"≈ {months:.0f} months" if months else "Not reached"}</b></div>')
+              f'<b>{band_span("break_even", data["break_even"]) if data["break_even"].get("band") else f"≈ {months:.0f} months" if months else "Not reached"}</b></div>')
     notes = "".join(f'<div class="sc-small" style="margin-top:6px">• {html.escape(d["note"])}</div>'
                     for d in data["targets"].values() if d.get("note"))
     return clean(f"""

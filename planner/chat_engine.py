@@ -19,7 +19,7 @@ from typing import Callable
 
 import requests
 
-from plan_predict import ASSUMPTIONS, EXTRA_INPUTS, TARGETS, break_even, missing_inputs, predict
+from plan_predict import ASSUMPTIONS, EXTRA_INPUTS, TARGETS, break_even, missing_inputs, needed_inputs, predict
 
 INTENTS = [*TARGETS, "break_even", "all", "help"]
 KEYWORDS = {  # checked in this order; first match wins
@@ -66,7 +66,8 @@ LLMReader = Callable[[str, dict], dict]
 
 
 def new_state(concept: dict) -> dict:
-    return {"inputs": dict(concept), "intent": None, "asking": None, "awaiting_objective": False, "history": [], "answers": {}}
+    return {"inputs": dict(concept), "intent": None, "asking": None, "awaiting_objective": False, "history": [], "answers": {},
+            "ranges": {}}  # field → (low, high) when the user gave a range, e.g. "100-200 guests"
 
 
 def typical(field: str) -> str:
@@ -154,13 +155,34 @@ def share_words(text: str) -> float | None:
     return next((float(v) for w, v in SHARE_WORDS if w in text + " "), None)
 
 
+NUM_RANGE = r"(\d+(?:\.\d+)?)\s*%?\s*(?:-|–|to)\s*(\d+(?:\.\d+)?)\s*"
+RANGE_UNITS = {  # "100-200 guests", "10 to 14 hours", "30-40% delivery", "40-60 items", "20-30% alcohol"
+    "guests_per_day": r"%?(?:guests|customers|covers|people)",
+    "opening_hours": r"(?:hours|hrs|hr|h)\b",
+    "delivery_share": r"%?\s*(?:percent\s*)?(?:of\s*(?:my\s*)?orders\s*)?(?:delivery|delivered)",
+    "menu_items": r"(?:menu items|items|dishes)",
+    "alcohol_share": r"%?\s*(?:percent\s*)?(?:of\s*(?:my\s*)?sales\s*)?(?:from\s*)?(?:alcohol|liquor|drinks|bar)",
+}
+
+
+def rule_ranges(text: str, asking: str | None) -> dict:
+    """Ranges the user gave: {field: (low, high)}. A bare "100-200" answers the question being asked."""
+    found = {f: (float(m.group(1)), float(m.group(2))) for f, unit in RANGE_UNITS.items()
+             if (m := re.search(NUM_RANGE + unit, text))}
+    if not found and asking in RANGE_UNITS and asking != "opening_hours" and (m := re.fullmatch(r"\D*" + NUM_RANGE + r"\D*", text)):
+        found[asking] = (float(m.group(1)), float(m.group(2)))
+    return found
+
+
 def rule_values(message: str, asking: str | None) -> dict:
-    """Values stated in free text, plus a bare answer to the question being asked."""
+    """Values stated in free text, plus a bare answer to the question being asked. Ranges come as (low, high)."""
     text = message.lower()
     values = {f: float(m.group(1)) for f, pat in VALUE_PATTERNS.items() if (m := re.search(pat, text))}
     about_time = asking == "opening_hours" or re.search(r"\b(am|pm|open|opening|morning|evening|night|noon|midnight)\b", text)
-    if about_time and (hours := opening_hours(text)) is not None:
+    ranges = rule_ranges(text, asking)
+    if about_time and "opening_hours" not in ranges and (hours := opening_hours(text)) is not None:
         values["opening_hours"] = hours
+    values.update(ranges)
     if m := re.search(r"(\d+(?:\.\d+)?)\s*(cr|crore)s?\b", text):
         values["budget_lakh"] = float(m.group(1)) * 100
     elif (m := re.search(r"(\d+(?:\.\d+)?)\s*(?:lakh|lac|l)\b", text)) and re.search(r"budget|invest|capital|fund|have", text):
@@ -191,6 +213,17 @@ def valid_values(values: dict) -> tuple[dict, list[str]]:
         if "options" in spec:
             if value in spec["options"]:
                 kept[field] = value
+            continue
+        if isinstance(value, (list, tuple)) and len(value) == 2 and "question" in spec:  # a range
+            try:
+                low_v, high_v = sorted(float(v) for v in value)
+            except (TypeError, ValueError):
+                continue
+            low, high = spec["range"]
+            if low <= low_v and high_v <= high:
+                kept[field] = (low_v, high_v) if low_v < high_v else low_v
+            else:
+                problems.append(f"{spec['question'].split('?')[0]}? Please keep both ends between {low} and {high} {spec['unit']}.")
             continue
         try:
             number = float(value)
@@ -225,7 +258,8 @@ def gemini_reader(api_key: str, model: str = "gemini-3.5-flash-lite", timeout: f
             "For opening_hours, turn a time range into the number of hours open, wrapping past midnight "
             "(\"5pm to 3am\" = 10, \"11 in the morning till 11 at night\" = 12, \"9 to 5\" = 8).\n"
             f"Extract only values the user explicitly states, for these fields: {json.dumps(fields)}. "
-            f"The assistant just asked for: {state.get('asking')}. A bare number answers that field.\n"
+            f"The assistant just asked for: {state.get('asking')}. A bare number answers that field. "
+            "If the user gives a range (\"100-200 guests\", \"between 30 and 40%\"), return [low, high].\n"
             'Reply with JSON only: {"intent": <intent or null>, "values": {<field>: <value>}}\n'
             f"Message: {message!r}"
         )
@@ -303,16 +337,40 @@ def compare_with_facts(target: str, value: float, inputs: dict) -> str | None:
     return None
 
 
-def answer_data(target: str, inputs: dict) -> dict:
-    """The numbers behind an answer, for drawing answer cards and the summary (same values as answer())."""
+def answer_data(target: str, inputs: dict, ranges: dict | None = None) -> dict:
+    """The numbers behind an answer, for drawing answer cards and the summary (same values as answer()).
+
+    With ranges ({field: (low, high)}) that this answer uses, data["band"] also holds the answer at the low and
+    at the high end of every range: {"fields": {...}, "low": data at the lows, "high": data at the highs}.
+    """
+    ranges = ranges or {}
     if target == "all":
-        return {"targets": {t: answer_data(t, inputs) for t in TARGETS}, "break_even": answer_data("break_even", inputs)}
+        return {"targets": {t: answer_data(t, inputs, ranges) for t in TARGETS},
+                "break_even": answer_data("break_even", inputs, ranges)}
     if target == "break_even":
         b = break_even(inputs)
-        return {**b, "investment": b["predictions"]["investment_lakh"]}
-    r = predict(target, inputs)
-    based_on = {f: inputs[f] for f in TARGETS[target]["features"] if f in EXTRA_INPUTS and f in inputs}
-    return {**r, "note": compare_with_facts(target, r["value"], inputs), "based_on": based_on}
+        data = {**b, "investment": b["predictions"]["investment_lakh"]}
+    else:
+        r = predict(target, inputs)
+        based_on = {f: inputs[f] for f in TARGETS[target]["features"] if f in EXTRA_INPUTS and f in inputs}
+        data = {**r, "note": compare_with_facts(target, r["value"], inputs), "based_on": based_on}
+    used = {f: rng for f, rng in ranges.items() if f in needed_inputs(target)}
+    if used:
+        data["band"] = {"fields": used,
+                        "low": answer_data(target, {**inputs, **{f: lo for f, (lo, _) in used.items()}}),
+                        "high": answer_data(target, {**inputs, **{f: hi for f, (_, hi) in used.items()}})}
+    return data
+
+
+def band_text(target: str, data: dict) -> str | None:
+    """'With 100 guests/day: ≈ ₹45.1 lakh · with 200 guests/day: ≈ ₹51.1 lakh' for a ranged answer."""
+    band = data.get("band")
+    if not band:
+        return None
+    side = lambda end: ", ".join(typical_value(f, rng[0 if end == "low" else 1]) for f, rng in band["fields"].items())
+    value = lambda d: ((f"≈ {d['months']:.0f} months" if d["months"] else "not reached") if target == "break_even"
+                       else f"≈ {fmt_value(target, d['value'])}")
+    return f"**Range:** with {side('low')}: {value(band['low'])} · with {side('high')}: {value(band['high'])}."
 
 
 def start_objective(state: dict, objective: str) -> None:
@@ -334,7 +392,7 @@ def ask_next(state: dict) -> str | None:
         spec = EXTRA_INPUTS[missing[0]]
         return f"{spec['question']} _(Say “not sure” to use a typical value: {typical(missing[0])}.)_"
     state["asking"] = None
-    data = answer_data(intent, state["inputs"])
+    data = answer_data(intent, state["inputs"], state.get("ranges"))
     answers = state.setdefault("answers", {})
     if intent == "all":
         answers.update(data["targets"], break_even=data["break_even"])
@@ -342,6 +400,11 @@ def ask_next(state: dict) -> str | None:
         answers[intent] = data
     state["_meta"] = {"answer": intent, "data": data}
     reply = answer(intent, state["inputs"])
+    parts = data["targets"].items() if intent == "all" else [(intent, data)]
+    bands = [b for t, d in [*parts, *([("break_even", data["break_even"])] if intent == "all" else [])]
+             if (b := band_text(t, d))]
+    if bands:
+        reply = "\n\n".join([*bands, reply])
     state["intent"] = None
     return reply
 
@@ -355,6 +418,9 @@ def describe(values: dict) -> str:
 
 def typical_value(field: str, value) -> str:
     unit = (EXTRA_INPUTS.get(field) or USER_FACTS[field])["unit"]
+    if isinstance(value, tuple):
+        low, high = value
+        return f"{low:g}–{high:g}%" if unit == "%" else f"{low:g}–{high:g} {unit}"
     if unit == "₹ lakh":
         return f"₹{value:g} lakh"
     if isinstance(value, str):
@@ -378,7 +444,13 @@ def respond(state: dict, message: str, llm: LLMReader | None = None) -> list[str
     state["history"].append(user)
     intent, values, used = read_message(message, state, llm)
     kept, problems = valid_values(values)
-    state["inputs"].update(kept)
+    for field, value in kept.items():  # a range is stored as its middle (for the models) plus its two ends
+        if isinstance(value, tuple):
+            state["ranges"][field] = value
+            state["inputs"][field] = sum(value) / 2
+        else:
+            state["ranges"].pop(field, None)
+            state["inputs"][field] = value
     if facts := {f: v for f, v in kept.items() if f in USER_FACTS}:
         user["facts"] = facts
     replies: list[tuple[str, dict | None]] = []
@@ -390,6 +462,8 @@ def respond(state: dict, message: str, llm: LLMReader | None = None) -> list[str
     answered = state["asking"]
     if answered in kept and not re.fullmatch(r"\s*(?:yes|no|y|n|\d+(?:\.\d+)?\s*%?)\s*", message.lower()):  # say how a worded answer was read
         replies.append((f"Got it: {typical_value(answered, kept[answered])}.", None))
+    elif kept and answered not in kept and state["intent"] and not problems:  # details for a later question
+        replies.append((f"Noted: {describe(kept)}.", None))
     if problems:
         replies += [(p, None) for p in problems]
     elif intent in OBJECTIVES and intent != state["intent"] and not (state["asking"] and kept):

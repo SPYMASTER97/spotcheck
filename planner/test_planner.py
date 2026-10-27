@@ -91,6 +91,22 @@ def test_objective_required():
     assert not state["awaiting_objective"] and state["inputs"].get("guests_per_day") is None
 
 
+def test_ranges_give_low_and_high_answers():
+    state = new_state(concept("T03"))
+    respond(state, "How much money do I need to open?")
+    assert respond(state, "100-200 guests")[0] == "Got it: 100–200 guests."     # team request, 2026-10-27
+    reply = respond(state, "No")[-1]
+    band = state["answers"]["investment_lakh"]["band"]
+    low = predict("investment_lakh", {**state["inputs"], "guests_per_day": 100})["value"]
+    high = predict("investment_lakh", {**state["inputs"], "guests_per_day": 200})["value"]
+    assert abs(band["low"]["value"] - low) < 1e-9 and abs(band["high"]["value"] - high) < 1e-9
+    assert f"with 100 guests: ≈ ₹{low:,.1f} lakh" in reply and f"with 200 guests: ≈ ₹{high:,.1f} lakh" in reply
+    assert state["inputs"]["guests_per_day"] == 150                               # the middle feeds the main estimate
+    assert "between 20 and 350" in respond(state, "what about 100-500 guests")[0]  # both ends must be in range
+    respond(state, "How many staff do I need? We'll have 180 guests")            # a single value replaces the range
+    assert "guests_per_day" not in state["ranges"] and state["inputs"]["guests_per_day"] == 180
+
+
 def test_gemini_problems_fall_back_to_rules():
     def broken(message, state):
         raise TimeoutError
@@ -138,7 +154,7 @@ def test_demo_page_renders():
 
 if __name__ == "__main__":
     tests = [test_models_match_reference, test_missing_inputs, test_break_even_adds_up, test_chat_asks_then_answers,
-             test_chat_free_text_and_ranges, test_objective_required, test_worded_answers, test_gemini_problems_fall_back_to_rules, test_demo_page_renders]
+             test_chat_free_text_and_ranges, test_objective_required, test_worded_answers, test_ranges_give_low_and_high_answers, test_gemini_problems_fall_back_to_rules, test_demo_page_renders]
     for test in tests:
         test()
         print(f"✔ {test.__name__}")

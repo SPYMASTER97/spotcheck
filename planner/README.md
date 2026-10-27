@@ -36,7 +36,9 @@ Evaluation (10-fold CV, GroupKFold by restaurant, hold-out T01–T10, assumption
    back ("Got it: 10 hours."). **No number shown to the user comes from Gemini** (CLAUDE.md rule 2).
 3. Missing inputs are asked one at a time ("not sure" → a typical value, said out loud).
 4. The answer comes from `plan_predict.py` (the saved models), with a typical range (± CV MAE) and the
-   synthetic-data label. Follow-ups like "what about 250 guests?" redo the last answer.
+   synthetic-data label. If the user gives a range for an input ("100-200 guests", "30-40% delivery"), the
+   answer is also worked out at the low and the high end of every range and shown as a band
+   ("≈ ₹47.4–₹53.1 lakh"; with 100 guests → …, with 200 guests → …); the middle of the range feeds the main estimate. Follow-ups like "what about 250 guests?" redo the last answer.
 
 ## Files
 

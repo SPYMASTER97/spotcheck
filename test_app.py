@@ -171,6 +171,19 @@ def test_plan_chat_flow_and_summary():
     assert "My opening plan · Your concept (Base)" in summary and f"₹{expected:,.1f} lakh" in summary
 
 
+def test_plan_range_answer_card():
+    _, t03 = reference_concepts()[2]
+    at = run_page("compare", t03)
+    at.button(key="choose_0").click().run()
+    at.button(key="plan_go").click().run()
+    for text in ("How much money do I need to open?", "100-200 guests", "No"):
+        at.chat_input(key="plan_input").set_value(text).run()
+    band = at.session_state["plan"]["chat"]["answers"]["investment_lakh"]["band"]
+    text = html_text(at)
+    assert "for the range you gave" in text and "With 100 guests/day" in text and "With 200 guests/day" in text
+    assert f"≈ ₹{band['low']['value']:,.1f}–₹{band['high']['value']:,.1f} lakh" in text and not at.exception
+
+
 def test_plan_switch_asks_first():
     _, t03 = reference_concepts()[2]
     at = run_page("compare", t03, [{"changes": {"book_table": "No"}}])
@@ -189,7 +202,7 @@ if __name__ == "__main__":
     tests = [test_results_match_reference, test_verdict_rules, test_step_errors, test_cuisine_total_follows_chips,
              test_pages_render, test_whatif_form_multiple_changes, test_wizard_blocks_missing_location,
              test_plan_needs_a_selected_card, test_plan_empty_state, test_plan_chat_flow_and_summary,
-             test_plan_switch_asks_first]
+             test_plan_range_answer_card, test_plan_switch_asks_first]
     for test in tests:
         test()
         print(f"✔ {test.__name__}")
