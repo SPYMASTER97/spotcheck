@@ -48,6 +48,9 @@ def test_verdict_rules():
 def test_step_errors():
     concept = app.new_concept()
     assert app.step_error(1, concept) and app.step_error(2, concept)
+    assert concept["n_cuisines"] == 0 and concept["online_order"] == "No"     # nothing picked, online off by default
+    assert "at least one cuisine" in app.step_error(3, concept)
+    assert app.cuisine_name("c_Cafe") == "Coffee"
     concept.update(cuisines=CUISINE_FLAGS[:4], n_cuisines=2)
     assert "4 cuisines" in app.step_error(3, concept)
     concept.update(cuisines=CUISINE_FLAGS[:9], n_cuisines=8)

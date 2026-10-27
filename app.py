@@ -77,13 +77,16 @@ def rupees(x: float) -> str:
     return f"₹{x:,.0f}"
 
 
+CUISINE_LABEL = {"c_Cafe": "Coffee"}  # display name only; the model column stays c_Cafe (avoids clashing with the Cafe type)
+
+
 def cuisine_name(flag: str) -> str:
-    return flag[2:].replace("_", " ")
+    return CUISINE_LABEL.get(flag, flag[2:].replace("_", " "))
 
 
 def new_concept() -> dict:
-    return {"location": None, "primary_type": None, "has_bar": "No", "online_order": "Yes",
-            "book_table": "No", "cuisines": [], "n_cuisines": 1, "cost_for_two": 500}
+    return {"location": None, "primary_type": None, "has_bar": "No", "online_order": "No",
+            "book_table": "No", "cuisines": [], "n_cuisines": 0, "cost_for_two": 500}  # 0 until a cuisine is picked
 
 
 def to_inputs(concept: dict) -> dict:
@@ -154,6 +157,8 @@ def step_error(step: int, concept: dict) -> str | None:
         return "Pick an area to continue. Choose “Other area” if yours isn't listed."
     if step == 2 and not concept["primary_type"]:
         return "Pick the kind of place to continue."
+    if step == 3 and concept["n_cuisines"] < RANGES["n_cuisines"][0]:
+        return "Pick at least one cuisine, or press + if yours isn't in the list."
     if step == 3 and len(concept["cuisines"]) > RANGES["n_cuisines"][1]:
         return (f"Pick at most {RANGES['n_cuisines'][1]} main cuisines – that's the most any restaurant "
                 "in our data had.")
@@ -657,13 +662,13 @@ def page_check() -> None:
 
     elif step == 3:
         st.html('<div class="sc-h2">What\'s on the menu?</div>')
-        low, high = RANGES["n_cuisines"]
+        high = RANGES["n_cuisines"][1]
 
         def cuisines_changed():
             # The total follows the chips; cuisines added with + (not in the list) are kept on top.
             extras = c["n_cuisines"] - len(c["cuisines"]) if st.session_state.get("extras_added") else 0
             c["cuisines"] = list(st.session_state.w_cuisines)
-            c["n_cuisines"] = min(high, max(low, len(c["cuisines"]) + max(0, extras)))
+            c["n_cuisines"] = min(high, len(c["cuisines"]) + max(0, extras))  # 0 when nothing is picked
             st.session_state.w_n_cuisines = c["n_cuisines"]
 
         def total_changed():
@@ -675,7 +680,7 @@ def page_check() -> None:
                  on_change=cuisines_changed, format_func=lambda f: f"{CUISINE_EMOJI[f]} {cuisine_name(f)}")
         st.caption(f"{len(c['cuisines'])} selected · the total below updates as you tap")
         bind("w_n_cuisines", int(c["n_cuisines"]))
-        st.number_input("Total number of cuisines on your menu", min_value=low, max_value=high, step=1,
+        st.number_input("Total number of cuisines on your menu", min_value=0, max_value=high, step=1,
                         key="w_n_cuisines", on_change=total_changed,
                         help=f"Press + for cuisines that aren't in the list above (up to {high} in total).")
 
