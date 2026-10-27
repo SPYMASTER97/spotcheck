@@ -28,10 +28,12 @@ Evaluation (10-fold CV, GroupKFold by restaurant, hold-out T01–T10, assumption
 ## How the chat works
 
 1. The user asks in their own words ("How many staff do I need?").
-2. **Reading the question:** Google Gemini, if a key is set, or built-in keyword rules. Gemini only picks the
-   question type and pulls out values the user stated (e.g. "open 14 hours"). Its output is checked; anything
-   unexpected, a timeout or no key → the rules are used. **No number shown to the user comes from Gemini**
-   (CLAUDE.md rule 2).
+2. **Reading the question:** the built-in rules read every message first (fast): keywords, numbers, time
+   ranges ("5pm to 3am" = 10 hours), share words ("a quarter" = 25%), budgets ("1 Cr" = ₹100 lakh).
+   Only when they find nothing is Google Gemini asked (if a key is set; default model `gemini-3.5-flash-lite`,
+   15 s timeout). Gemini only picks the question type and pulls out values the user stated. Its output is
+   checked; anything unexpected, a timeout or no key → the rules' reading is used. A worded answer is confirmed
+   back ("Got it: 10 hours."). **No number shown to the user comes from Gemini** (CLAUDE.md rule 2).
 3. Missing inputs are asked one at a time ("not sure" → a typical value, said out loud).
 4. The answer comes from `plan_predict.py` (the saved models), with a typical range (± CV MAE) and the
    synthetic-data label. Follow-ups like "what about 250 guests?" redo the last answer.

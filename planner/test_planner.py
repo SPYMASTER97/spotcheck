@@ -104,8 +104,23 @@ def test_gemini_problems_fall_back_to_rules():
     state = new_state(concept("T03"))
     assert read_message("how many staff", state, broken)[0] == "staff_count"
     assert read_message("how many staff", state, bad_intent)[2].startswith("rules")
-    intent, values, used = read_message("how long will I stay open and what will I sell", state, good)
+    intent, values, used = read_message("what'll the till ring up?", state, good)       # rules can't read this
     assert (intent, used) == ("revenue_lakh", "gemini") and "made_up_field" not in values
+    assert read_message("how many staff do I need?", state, broken)[2] == "rules"  # rules understood: Gemini not asked
+
+
+def test_worded_answers():
+    from chat_engine import opening_hours
+    for text, hours in [("from 5pm to 3am", 10), ("11 in the morning till 11 at night", 12), ("9 to 5", 8),
+                        ("18:00 to 02:00", 8), ("noon to midnight", 12)]:
+        assert opening_hours(text) == hours, text
+    state = new_state(concept("T03"))
+    respond(state, "How many staff do I need?")
+    respond(state, "150")
+    assert respond(state, "From 5pm to 3am")[0] == "Got it: 10 hours."           # team's case, 2026-10-27
+    respond(state, "not sure")
+    assert respond(state, "mostly dine-in, maybe a quarter delivery")[0] == "Got it: 25%."
+    assert state["inputs"]["opening_hours"] == 10 and state["inputs"]["delivery_share"] == 25
 
 
 def test_demo_page_renders():
@@ -123,7 +138,7 @@ def test_demo_page_renders():
 
 if __name__ == "__main__":
     tests = [test_models_match_reference, test_missing_inputs, test_break_even_adds_up, test_chat_asks_then_answers,
-             test_chat_free_text_and_ranges, test_objective_required, test_gemini_problems_fall_back_to_rules, test_demo_page_renders]
+             test_chat_free_text_and_ranges, test_objective_required, test_worded_answers, test_gemini_problems_fall_back_to_rules, test_demo_page_renders]
     for test in tests:
         test()
         print(f"✔ {test.__name__}")

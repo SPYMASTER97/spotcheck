@@ -111,10 +111,56 @@ def rule_intent(message: str, awaiting_objective: bool = False) -> str | None:
     return None
 
 
+TIME = r"(noon|midnight|\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.|p\.m\.|in the morning|morning|in the evening|evening|at night|night)?)"
+
+
+def clock(token: str) -> tuple[float, str | None]:
+    """'5pm' → (5, 'pm'); '11 in the morning' → (11, 'am'); '7:30' → (7.5, None)."""
+    token = token.strip()
+    if token == "noon":
+        return 12, "pm"
+    if token == "midnight":
+        return 12, "am"
+    m = re.match(r"(\d{1,2})(?::(\d{2}))?\s*(.*)", token)
+    hour = int(m.group(1)) + int(m.group(2) or 0) / 60
+    rest = m.group(3).replace(".", "")
+    part = "am" if ("am" in rest or "morning" in rest) else "pm" if any(w in rest for w in ("pm", "evening", "night")) else None
+    return hour, part
+
+
+def opening_hours(text: str) -> float | None:
+    """Hours open from a time range, wrapping past midnight: 'from 5pm to 3am' → 10, '11 to 11' → 12."""
+    m = re.search(TIME + r"\s*(?:to|till|until|-|–)\s*" + TIME, text)
+    if not m:
+        return None
+    (h1, p1), (h2, p2) = clock(m.group(1)), clock(m.group(2))
+    if h1 >= 24 or h2 >= 24:
+        return None
+    if h1 > 12 or h2 > 12 or (p1 is None and p2 is None and h1 >= h2):  # 24-hour clock, or "11 to 11" (morning to night)
+        p1 = p1 or ("am" if h1 <= 12 else None)
+        p2 = p2 or ("pm" if h2 <= 12 else None)
+    to24 = lambda h, p: h % 12 + (12 if p == "pm" else 0) if p else h
+    p1 = p1 or (p2 if p2 and to24(h1, p2) < to24(h2, p2) else ("am" if p2 == "pm" else "pm" if p2 else None))
+    hours = (to24(h2, p2) - to24(h1, p1)) % 24
+    return round(hours or 24, 1)
+
+
+SHARE_WORDS = [("three quarters", 75), ("three-quarters", 75), ("half", 50), ("a third", 33), ("one third", 33),
+               ("quarter", 25), ("a fifth", 20), ("a tenth", 10), ("none", 0), ("nothing", 0), ("zero", 0), ("no ", 0)]
+
+
+def share_words(text: str) -> float | None:
+    """'maybe a quarter delivery' → 25 (for % questions)."""
+    return next((float(v) for w, v in SHARE_WORDS if w in text + " "), None)
+
+
 def rule_values(message: str, asking: str | None) -> dict:
     """Values stated in free text, plus a bare answer to the question being asked."""
     text = message.lower()
     values = {f: float(m.group(1)) for f, pat in VALUE_PATTERNS.items() if (m := re.search(pat, text))}
+    about_time = asking == "opening_hours" or re.search(r"\b(am|pm|open|opening|morning|evening|night|noon|midnight)\b", text)
+    if about_time and (hours := opening_hours(text)) is not None:
+        values["opening_hours"] = hours
     if m := re.search(r"(\d+(?:\.\d+)?)\s*(cr|crore)s?\b", text):
         values["budget_lakh"] = float(m.group(1)) * 100
     elif (m := re.search(r"(\d+(?:\.\d+)?)\s*(?:lakh|lac|l)\b", text)) and re.search(r"budget|invest|capital|fund|have", text):
@@ -128,6 +174,8 @@ def rule_values(message: str, asking: str | None) -> dict:
             values["takeover"] = "Yes"
         elif re.search(r"\b(no|nope|new|n)\b", text):
             values["takeover"] = "No"
+    elif asking in ("delivery_share", "alcohol_share") and not values and (share := share_words(text)) is not None:
+        values[asking] = share
     elif asking and not values and (m := re.search(r"(\d+(?:\.\d+)?)", text)):  # a bare number answers the question
         values[asking] = float(m.group(1))
     return values
@@ -157,7 +205,7 @@ def valid_values(values: dict) -> tuple[dict, list[str]]:
     return kept, problems
 
 
-def gemini_reader(api_key: str, model: str = "gemini-3.5-flash-lite", timeout: float = 8) -> LLMReader:
+def gemini_reader(api_key: str, model: str = "gemini-3.5-flash-lite", timeout: float = 15) -> LLMReader:
     """Gemini as a message reader only. Returns {"intent": ..., "values": {...}}; raises on any failure."""
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
     fields = {f: (s.get("options") or f"number {s['range'][0]}-{s['range'][1]} {s['unit']}") for f, s in
@@ -174,6 +222,8 @@ def gemini_reader(api_key: str, model: str = "gemini-3.5-flash-lite", timeout: f
             f"when the assistant is waiting for one (waiting now: {bool(state.get('awaiting_objective'))}). "
             "Statements about what the user already has (\"I have 1 Cr\", \"I have 20 staff\") are NOT intents: "
             "use null and extract them as budget_lakh / staff_available (1 crore = 100 lakh).\n"
+            "For opening_hours, turn a time range into the number of hours open, wrapping past midnight "
+            "(\"5pm to 3am\" = 10, \"11 in the morning till 11 at night\" = 12, \"9 to 5\" = 8).\n"
             f"Extract only values the user explicitly states, for these fields: {json.dumps(fields)}. "
             f"The assistant just asked for: {state.get('asking')}. A bare number answers that field.\n"
             'Reply with JSON only: {"intent": <intent or null>, "values": {<field>: <value>}}\n'
@@ -189,10 +239,12 @@ def gemini_reader(api_key: str, model: str = "gemini-3.5-flash-lite", timeout: f
 
 
 def read_message(message: str, state: dict, llm: LLMReader | None) -> tuple[str | None, dict, str]:
-    """(intent, values, reader used). Gemini output is checked; anything unexpected falls back to the rules."""
+    """(intent, values, reader used). The fast rules read first; Gemini is asked only when they find nothing
+    (e.g. "maybe a quarter delivery"). Gemini output is checked; anything unexpected falls back to the rules."""
     intent = rule_intent(message, state.get("awaiting_objective", False))
     values, used = rule_values(message, state["asking"]), "rules"
-    if llm is not None:
+    understood = intent or values or any(p in message.lower() for p in NOT_SURE)
+    if llm is not None and not understood:
         try:
             out = llm(message, state)
             llm_intent = out.get("intent")
@@ -335,6 +387,9 @@ def respond(state: dict, message: str, llm: LLMReader | None = None) -> list[str
         spec = EXTRA_INPUTS[state["asking"]]
         state["inputs"][state["asking"]] = spec["default"]
         replies.append((f"OK, I'll use a typical value: {typical(state['asking'])}.", None))
+    answered = state["asking"]
+    if answered in kept and not re.fullmatch(r"\s*(?:yes|no|y|n|\d+(?:\.\d+)?\s*%?)\s*", message.lower()):  # say how a worded answer was read
+        replies.append((f"Got it: {typical_value(answered, kept[answered])}.", None))
     if problems:
         replies += [(p, None) for p in problems]
     elif intent in OBJECTIVES and intent != state["intent"] and not (state["asking"] and kept):
@@ -346,9 +401,8 @@ def respond(state: dict, message: str, llm: LLMReader | None = None) -> list[str
     elif not problems:
         text = ask_next(state)
         replies.append((text, state.pop("_meta", None)))
-    elif state["asking"]:
-        spec = EXTRA_INPUTS[state["asking"]]
-        replies.append((spec["question"], {"asking": state["asking"], "q_index": None, "q_total": None}))
+    elif state["asking"]:  # the range message already repeats the question: just keep its quick replies
+        replies[-1] = (replies[-1][0], {"asking": state["asking"], "q_index": None, "q_total": None})
 
     for text, meta in replies:
         _say(state, text, used, meta)
