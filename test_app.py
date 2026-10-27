@@ -117,6 +117,17 @@ def test_whatif_form_multiple_changes():
     assert not [b for b in at.button if b.label == "+ Add what-if card"] and not at.exception
 
 
+def test_whatif_cuisine_total_follows_chips():
+    _, t03 = reference_concepts()[2]                                           # 3 cuisines, total 3
+    at = run_page("compare", t03)
+    picked = CUISINE_FLAGS[:7]
+    at.button_group(key="wi_cuisines").set_value(picked).run()               # team's case: 7 chips showed total 4
+    assert at.number_input(key="wi_n").value == 7 and not at.exception
+    at.number_input(key="wi_n").increment().run()                            # one cuisine outside the list
+    at.button_group(key="wi_cuisines").set_value(picked[:5]).run()           # remove 2 chips, keep the extra
+    assert at.number_input(key="wi_n").value == 6
+
+
 def test_wizard_blocks_missing_location():
     at = AppTest.from_file(APP_FILE, default_timeout=30).run()
     assert not at.exception
@@ -200,7 +211,8 @@ def test_plan_switch_asks_first():
 
 if __name__ == "__main__":
     tests = [test_results_match_reference, test_verdict_rules, test_step_errors, test_cuisine_total_follows_chips,
-             test_pages_render, test_whatif_form_multiple_changes, test_wizard_blocks_missing_location,
+             test_pages_render, test_whatif_form_multiple_changes, test_whatif_cuisine_total_follows_chips,
+             test_wizard_blocks_missing_location,
              test_plan_needs_a_selected_card, test_plan_empty_state, test_plan_chat_flow_and_summary,
              test_plan_range_answer_card, test_plan_switch_asks_first]
     for test in tests:

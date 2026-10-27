@@ -547,11 +547,16 @@ header[data-testid="stHeader"] {display: none;}
 .stButton button[kind="primary"], .stDownloadButton button[kind="primary"] {min-height: 52px; box-shadow: 0 4px 12px rgba(226,55,68,0.25);}
 .st-key-playcard, .st-key-whatif_form, .st-key-services {background: #fff; border: 1px solid #E8E8E8; border-radius: 16px; padding: 16px;}
 .st-key-bottomnav {position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px;
-  background: #fff; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); z-index: 1000;}
+  background: #fff; border-top: 1px solid #EEE; box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+  padding: 0 8px env(safe-area-inset-bottom); z-index: 1000;}
 .st-key-bottomnav [data-testid="stButtonGroup"] {width: 100%;}
-.st-key-bottomnav [data-testid="stButtonGroup"] button {flex: 1 1 0; min-width: 0; padding: 4px 2px; font-size: 0.72rem; line-height: 1.15;}
-.st-key-bottomnav [data-testid="stButtonGroup"] button [data-has-shortcut] {flex-direction: column; gap: 1px;}  /* icon above label */
-.st-key-bottomnav [data-testid="stButtonGroup"] button p {white-space: nowrap; overflow: visible; text-overflow: clip;}
+.st-key-bottomnav [data-testid="stButtonGroup"] > div {gap: 0 !important; border: none !important;}
+.st-key-bottomnav [data-testid="stButtonGroup"] button {flex: 1 1 0; min-width: 0; min-height: 52px; padding: 0 2px;
+  border: none !important; border-top: 3px solid transparent !important; border-radius: 0 !important;
+  background: transparent !important; color: #696969 !important; box-shadow: none !important;}
+.st-key-bottomnav [data-testid="stButtonGroup"] button p {font-size: 0.86rem; font-weight: 600; white-space: nowrap;}
+.st-key-bottomnav [data-testid="stButtonGroup"] button[aria-checked="true"] {color: #E23744 !important; border-top-color: #E23744 !important;}
+.st-key-bottomnav [data-testid="stButtonGroup"] button[aria-checked="true"] p {color: #E23744; font-weight: 700;}
 .st-key-cardrow {flex-wrap: nowrap !important; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px !important;
   align-items: stretch !important; padding: 4px 2px 12px; -webkit-overflow-scrolling: touch; scrollbar-width: none;}
 .st-key-cardrow > [data-testid="stLayoutWrapper"] {flex: 0 0 86% !important; width: 86% !important; max-width: 86% !important;
@@ -568,9 +573,7 @@ header[data-testid="stHeader"] {display: none;}
 [class*="st-key-pick_"][class*="_on"] button {background: #E23744; border-color: #E23744; color: #fff;}
 .sc-card-body .sc-card-head {padding-right: 36px;}
 .sc-faded {opacity: 0.8;}
-.st-key-plancta {position: fixed; bottom: 68px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px;
-  padding: 10px 16px 6px; z-index: 900; background: linear-gradient(rgba(248,248,248,0), #F8F8F8 35%);}
-.block-container:has(.st-key-plancta) {padding-bottom: 10rem;}
+.st-key-plancta {margin: 2px 0 6px;}
 .sc-empty {text-align: center; padding: 26px 18px;}
 .sc-empty-icon {font-size: 3rem; background: #F6F3F2; border-radius: 50%; width: 96px; height: 96px; display: inline-flex;
   align-items: center; justify-content: center; margin-bottom: 10px;}
@@ -800,7 +803,7 @@ def add_whatif() -> None:
     for f, _, _, _ in SERVICES:
         new[f] = "Yes" if new[f] else "No"
     new["cuisines"] = [x for x in CUISINE_FLAGS if x in new["cuisines"]]
-    new["n_cuisines"] = min(RANGES["n_cuisines"][1], max(int(new["n_cuisines"]), len(new["cuisines"]), 1))
+    new["n_cuisines"] = max(int(new["n_cuisines"]), len(new["cuisines"]))
     new["cost_for_two"] = int(new["cost_for_two"])
     changes = diff(c, new)
     problem = (step_error(3, new) or step_error(4, new)
@@ -809,37 +812,46 @@ def add_whatif() -> None:
     ss.wi_error = problem
     if not problem:
         ss.whatifs.append({"changes": changes})
-        for k in WI_KEYS.values():  # next form starts again from the concept
+        for k in [*WI_KEYS.values(), "wi_prev"]:  # the next card starts again from the concept
             ss.pop(k, None)
+
+
+def wi_cuisines_changed() -> None:
+    """What-if card: the cuisine total follows the chips, keeping any extra cuisines added with + on top."""
+    ss = st.session_state
+    extras = max(0, int(ss.wi_n) - len(ss.get("wi_prev", [])))
+    ss.wi_prev = list(ss.wi_cuisines)
+    ss.wi_n = min(RANGES["n_cuisines"][1], len(ss.wi_cuisines) + extras)
 
 
 def whatif_form(c: dict, whatifs: list[dict]) -> None:
     for f, k in WI_KEYS.items():
         value = c[f] == "Yes" if f in SHORT else list(c[f]) if f == "cuisines" else c[f]
         bind(k, value)
+    bind("wi_prev", list(c["cuisines"]))
     use_slider = SLIDER_MIN <= c["cost_for_two"] <= SLIDER_MAX
     with st.container(key="whatif_form"):
         st.markdown(f"**➕ Add what-if card {len(whatifs) + 1} of {MAX_WHATIFS}**")
         st.caption("Starts from your concept – change as many settings as you like, then add the card.")
         if st.session_state.get("wi_error"):
             st.error(f"⚠️ {st.session_state.wi_error}")
-        with st.form("whatif", border=False):
-            st.selectbox("📍 Location", ALLOWED["location"], key="wi_location")
-            st.selectbox("Restaurant type", ALLOWED["primary_type"], key="wi_type",
-                         format_func=lambda t: f"{TYPE_EMOJI[t]} {t}")
-            for field, emoji, label, hint in SERVICES:
-                st.toggle(f"{emoji} {label}", key=f"wi_{field}", help=hint)
-            st.pills("Main cuisines", CUISINE_FLAGS, selection_mode="multi", key="wi_cuisines",
-                     format_func=lambda f: f"{CUISINE_EMOJI[f]} {cuisine_name(f)}")
-            low, high = RANGES["n_cuisines"]
-            st.number_input("Total number of cuisines", min_value=low, max_value=high, step=1, key="wi_n",
-                            help="Raised automatically to at least the number of cuisines ticked above.")
-            if use_slider:
-                st.slider("💰 Planned price for two", SLIDER_MIN, SLIDER_MAX, step=SLIDER_STEP, key="wi_cost",
-                          format="₹%d")
-            else:
-                st.number_input("💰 Planned price for two (₹)", *RANGES["cost_for_two"], step=10, key="wi_cost")
-            st.form_submit_button("+ Add what-if card", type="primary", on_click=add_whatif, width="stretch")
+        st.selectbox("📍 Location", ALLOWED["location"], key="wi_location")
+        st.selectbox("Restaurant type", ALLOWED["primary_type"], key="wi_type",
+                     format_func=lambda t: f"{TYPE_EMOJI[t]} {t}")
+        for field, emoji, label, hint in SERVICES:
+            st.toggle(f"{emoji} {label}", key=f"wi_{field}", help=hint)
+        st.pills("Main cuisines", CUISINE_FLAGS, selection_mode="multi", key="wi_cuisines",
+                 on_change=wi_cuisines_changed, format_func=lambda f: f"{CUISINE_EMOJI[f]} {cuisine_name(f)}")
+        high = RANGES["n_cuisines"][1]
+        st.caption(f"{len(st.session_state.wi_cuisines)} selected · the total below updates as you tap")
+        st.number_input("Total number of cuisines", min_value=0, max_value=high, step=1, key="wi_n",
+                        help=f"Press + for cuisines that aren't in the list above (up to {high} in total).")
+        if use_slider:
+            st.slider("💰 Planned price for two", SLIDER_MIN, SLIDER_MAX, step=SLIDER_STEP, key="wi_cost",
+                      format="₹%d")
+        else:
+            st.number_input("💰 Planned price for two (₹)", *RANGES["cost_for_two"], step=10, key="wi_cost")
+        st.button("+ Add what-if card", type="primary", on_click=add_whatif, width="stretch")
 
 
 def page_compare() -> None:
@@ -864,6 +876,12 @@ def page_compare() -> None:
                 st.html(scenario_card(sc, selection(i)))
                 st.button("✓ Selected" if i == pick else "Choose this one", key=f"choose_{i}", on_click=set_pick,
                           args=(i,), type="primary" if i == pick else "secondary", width="stretch")
+    with st.container(key="plancta"):
+        if pick is None:
+            st.button("Select a card to continue", disabled=True, width="stretch", key="plan_go_off")
+        else:
+            st.button("Plan this concept →", type="primary", width="stretch", key="plan_go",
+                      on_click=plan_this, args=(scenario_label(rows, pick), rows[pick]["concept"]))
     if st.session_state.get("plan_switch"):
         switch_plan_dialog()
     if len(rows) > 1:
@@ -883,12 +901,6 @@ def page_compare() -> None:
         your rating.</div>"""))
     st.button("📄 Get my summary", on_click=go, args=("summary",), width="stretch")
     st.button("← Back to results", on_click=go, args=("results",), width="stretch")
-    with st.container(key="plancta"):
-        if pick is None:
-            st.button("Select a card to continue", disabled=True, width="stretch", key="plan_go_off")
-        else:
-            st.button("Plan this concept →", type="primary", width="stretch", key="plan_go",
-                      on_click=plan_this, args=(scenario_label(rows, pick), rows[pick]["concept"]))
 
 
 # ---------------------------------------------------------------- Plan
@@ -1065,7 +1077,7 @@ def page_about() -> None:
 
 PAGES = {"check": page_check, "results": page_results, "compare": page_compare, "plan": page_plan,
          "summary": page_summary, "about": page_about}
-NAV = {"predictor": "🍽️ Predictor", "compare": "🔁 Compare", "plan": "💬 Plan", "about": "ℹ️ About"}
+NAV = {"predictor": "Predictor", "compare": "Compare", "plan": "Plan", "about": "About"}
 
 
 def bottom_nav() -> None:
