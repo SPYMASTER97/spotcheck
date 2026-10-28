@@ -131,6 +131,16 @@ def test_whatif_cuisine_total_follows_chips():
     assert at.number_input(key="wi_n").value == 6
 
 
+def test_about_explains_chat_and_features():
+    at = run_page("about", reference_concepts()[2][1])
+    text = html_text(at)
+    assert "Google Gemini" in text and "Linear Regression on synthetic data" in text and not at.exception
+    assert "Predicts the typical cost for two from 18 inputs" in text and "(19 inputs)" in text
+    for target in ("Floor area", "Staff headcount", "Initial investment", "Food cost (COGS)", "Monthly revenue"):
+        assert target in text
+    assert "Taking over an existing site *" in text and "12 cuisine yes/no flags" in text
+
+
 def test_wizard_blocks_missing_location():
     at = AppTest.from_file(APP_FILE, default_timeout=30).run()
     assert not at.exception
@@ -215,7 +225,7 @@ def test_plan_switch_asks_first():
 if __name__ == "__main__":
     tests = [test_results_match_reference, test_verdict_rules, test_step_errors, test_cuisine_total_follows_chips,
              test_pages_render, test_whatif_form_multiple_changes, test_whatif_cuisine_total_follows_chips,
-             test_wizard_blocks_missing_location,
+             test_about_explains_chat_and_features, test_wizard_blocks_missing_location,
              test_plan_needs_a_selected_card, test_plan_empty_state, test_plan_chat_flow_and_summary,
              test_plan_range_answer_card, test_plan_switch_asks_first]
     for test in tests:

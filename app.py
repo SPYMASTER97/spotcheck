@@ -21,7 +21,8 @@ from pathlib import Path
 
 import streamlit as st
 
-from predict import ALLOWED, CUISINE_FLAGS, RANGES, predict_price, predict_rating, validate_inputs
+from predict import (ALLOWED, CUISINE_FLAGS, LABELS, PRICE_FEATURES, RANGES, RATING_FEATURES, predict_price,
+                     predict_rating, validate_inputs)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "planner"))
 from chat_engine import (OBJECTIVES, USER_FACTS, choose_objective, fmt_range, fmt_value,  # noqa: E402
@@ -575,6 +576,11 @@ header[data-testid="stHeader"] {display: none;}
 [class*="st-key-pick_"][class*="_on"] button {background: #E23744; border-color: #E23744; color: #fff;}
 .sc-card-body .sc-card-head {padding-right: 36px;}
 .sc-faded {opacity: 0.8;}
+.sc-chips-wrap {flex-wrap: wrap; overflow: visible;}
+.sc-matrix {width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 8px;}
+.sc-matrix th, .sc-matrix td {padding: 5px 3px; border-bottom: 1px solid #EEE; text-align: center;}
+.sc-matrix th:first-child, .sc-matrix td:first-child {text-align: left;}
+.sc-matrix td:not(:first-child) {color: #E23744; font-weight: 800;}
 .st-key-plancta {margin: 2px 0 6px;}
 .sc-empty {text-align: center; padding: 26px 18px;}
 .sc-empty-icon {font-size: 3rem; background: #F6F3F2; border-radius: 50%; width: 96px; height: 96px; display: inline-flex;
@@ -1052,12 +1058,52 @@ def page_summary() -> None:
     st.button("Start a new concept", on_click=reset_all, width="stretch")
 
 
+PLAN_INPUT_LABELS = {  # inputs the Plan chat asks for (synthetic planning data)
+    "guests_per_day": "Guests per day", "opening_hours": "Opening hours a day", "delivery_share": "Delivery share of orders (%)",
+    "menu_items": "Menu items", "alcohol_share": "Alcohol share of sales (%)", "takeover": "Taking over an existing site",
+}
+
+
+def feature_label(field: str) -> str:
+    return PLAN_INPUT_LABELS.get(field) or LABELS[field].replace("Cafe cuisine", "Coffee cuisine")
+
+
+def feature_chips(fields: list[str]) -> str:
+    """Feature names as chips; the 12 cuisine flags are shown as one chip."""
+    cuisines = [f for f in fields if f in CUISINE_FLAGS]
+    names = [feature_label(f) for f in fields if f not in CUISINE_FLAGS]
+    if cuisines:
+        names.append(f"{len(cuisines)} cuisine yes/no flags")
+    return chips(names).replace('class="sc-chips"', 'class="sc-chips sc-chips-wrap"')
+
+
+def features_matrix_html() -> str:
+    """Which inputs each Plan target uses: rows = inputs, columns = the 5 targets (✓ = used)."""
+    fields = [f for f in [*PRICE_FEATURES, "cost_for_two", *PLAN_INPUT_LABELS]
+              if f not in CUISINE_FLAGS and any(f in TARGETS[t]["features"] for t in TARGETS)]
+    head = "".join(f'<th title="{html.escape(TARGETS[t]["label"])}">{PLAN_ICON[t]}</th>' for t in TARGETS)
+    body = "".join(
+        f"<tr><td>{html.escape(feature_label(f))}{' *' if f in PLAN_INPUT_LABELS else ''}</td>"
+        + "".join(f"<td>{'✓' if f in TARGETS[t]['features'] else ''}</td>" for t in TARGETS) + "</tr>"
+        for f in fields)
+    body += ("<tr><td>12 cuisine yes/no flags</td>"
+             + "".join(f"<td>{'✓' if any(c in TARGETS[t]['features'] for c in CUISINE_FLAGS) else ''}</td>" for t in TARGETS)
+             + "</tr>")
+    legend = " · ".join(f"{PLAN_ICON[t]} {html.escape(TARGETS[t]['label'])}" for t in TARGETS)
+    return clean(f"""<table class="sc-matrix"><tr><th>Input</th>{head}</tr>{body}</table>
+        <div class="sc-small" style="margin-top:6px">{legend}<br>* asked in the chat (synthetic). ⏱️ Break-even is a
+        formula on all five estimates plus stated assumptions (salary ₹{ASSUMPTIONS['salary_per_staff']:,}/month,
+        rent ₹{ASSUMPTIONS['base_rent_per_sqft']}/sq ft adjusted by area, other costs {ASSUMPTIONS['other_costs_pct']}% of
+        sales). A budget or staff number you mention is only compared with the estimates; it isn't a model input.</div>""")
+
+
 def page_about() -> None:
     st.html(clean(f"""
     <div class="sc-h2">How SpotCheck works</div>
     <div class="sc-card"><div class="sc-row">📝<div><b>Describe your idea in 4 steps</b></div></div></div>
     <div class="sc-card"><div class="sc-row">🤖<div><b>Two models compare it with 9,244 Bangalore restaurants</b></div></div></div>
     <div class="sc-card"><div class="sc-row">📊<div><b>Get a price check and a rating outlook</b></div></div></div>
+    <div class="sc-card"><div class="sc-row">💬<div><b>Pick the version you'll open and plan it in a chat</b></div></div></div>
     <div class="sc-h2" style="margin-top:12px">How accurate is it?</div>
     <div class="sc-card"><div class="sc-h3">💰 Price: typically within ₹{PRICE_BAND}</div>
       <div class="sc-muted">Average error on restaurants the model hadn't seen (10-fold cross-validation).
@@ -1065,6 +1111,28 @@ def page_about() -> None:
     <div class="sc-card"><div class="sc-h3">⭐ Rating: ranks correctly 81% of the time</div>
       <div class="sc-muted">Ranks a 4.0+ place above a lower-rated one 81% of the time (AUC 0.81). When it says 30%,
       about 30% of such places really are rated 4.0+. Logistic Regression model.</div></div>
+    <div class="sc-h2" style="margin-top:12px">The Plan chat</div>
+    <div class="sc-card"><div class="sc-h3">🗣️ Understanding your question: Google Gemini (an LLM)</div>
+      <div class="sc-muted">Built-in rules read each message first (numbers, time ranges like “5pm to 3am”, ranges
+      like “100-200 guests”). When they can't make sense of the wording, Gemini reads it – only to work out what you
+      are asking and which details you gave. Gemini never produces a number you see.</div></div>
+    <div class="sc-card"><div class="sc-h3">📐 The estimates: Linear Regression on synthetic data</div>
+      <div class="sc-muted">Floor area, staff, initial investment, food cost and monthly revenue come from five Linear
+      Regression models. These aren't in the Zomato data, so the models were trained on <b>synthetic planning data</b>:
+      the real inputs of 9,234 Bangalore restaurants plus generated details and targets built from industry-style
+      assumptions. They show how a plan could look, not facts about real restaurants. Break-even is a formula on
+      those five estimates.</div></div>
+    <div class="sc-h2" style="margin-top:12px">What each model uses</div>
+    <div class="sc-card"><div class="sc-h3">💰 Price (Random Forest, real data)</div>
+      <div class="sc-muted">Predicts the typical cost for two from {len(PRICE_FEATURES)} inputs:</div>
+      {feature_chips(PRICE_FEATURES)}</div>
+    <div class="sc-card"><div class="sc-h3">⭐ Rating (Logistic Regression, real data)</div>
+      <div class="sc-muted">Predicts the chance of 4.0+ from the same inputs plus your planned cost for two
+      ({len(RATING_FEATURES)} inputs):</div>
+      {feature_chips(RATING_FEATURES)}</div>
+    <div class="sc-card"><div class="sc-h3">💬 Plan chat (Linear Regression, synthetic data)</div>
+      <div class="sc-muted">All inputs used across the five plan estimates, and which estimate uses which:</div>
+      {features_matrix_html()}</div>
     <div class="sc-h2" style="margin-top:12px">The data</div>
     <div class="sc-card sc-muted">9,244 Bangalore restaurants with ratings from the Kaggle dataset 'Zomato Bangalore
       Restaurants' by Himanshu Poddar (scraped about 2019). We only use what you decide before opening – location,
@@ -1072,7 +1140,8 @@ def page_about() -> None:
     <div class="sc-h2" style="margin-top:12px">Limitations</div>
     <div class="sc-card"><ul style="margin:0;padding-left:18px">
       <li>⚠️ Food, service and hygiene aren't in the data.</li><li>⚠️ Closed restaurants are missing.</li>
-      <li>⚠️ A single snapshot from about 2019.</li><li>⚠️ Patterns, not cause and effect.</li><li>⚠️ Bangalore only.</li></ul></div>
+      <li>⚠️ A single snapshot from about 2019.</li><li>⚠️ Patterns, not cause and effect.</li><li>⚠️ Bangalore only.</li>
+      <li>⚠️ Plan estimates come from synthetic data, not real restaurant costs or sales.</li></ul></div>
     <div class="sc-muted sc-center">SpotCheck is a student project for the MICA ML Capstone.<br>
       Not affiliated with Zomato. No sign-up, no data stored.</div>"""))
 
