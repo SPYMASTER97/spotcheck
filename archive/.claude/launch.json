@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "spotcheck",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd '/Users/DELL/MLDL Capstone Group/ML Capstone/Session 19 - SpotCheck' && ../../.venv/bin/streamlit run app.py --server.port 8501 --server.headless true"],
+      "port": 8501
+    }
+  ]
+}

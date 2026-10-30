@@ -10,7 +10,7 @@ This folder is a deployable copy of files maintained in the parent folder. Edit 
 - `reference_tests.csv` (copied from the parent folder, incl. the expected output columns) and `test_reference.py`: the integration check.
 - `README.md` with Kaggle dataset attribution and retraining steps.
 - `app.py` (Streamlit): later, once screens are designed in Google Stitch.
-- NOT allowed: raw data (`zomato.csv`, `*.tab`), secrets, API keys.
+- NOT allowed: raw data (`zomato.csv`, `*.tab`), secrets, API keys — **except** under `archive/`, which holds the full project including the cleaned/derived data (team decision 2026-10-30). Never `zomato.csv`, secrets or API keys, anywhere.
 
 ## Before every push
 1. Run `python test_reference.py`. It must pass. If it fails, do not push; report the failure.

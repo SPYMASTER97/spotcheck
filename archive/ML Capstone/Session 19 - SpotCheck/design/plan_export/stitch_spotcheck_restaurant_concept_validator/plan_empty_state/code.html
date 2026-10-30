@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline": "#8f6f6e", "on-primary": "#ffffff", "inverse-on-surface": "#f3f0ef", "primary-fixed-dim": "#ffb3b1", "primary": "#b7122a", "primary-fixed": "#ffdad8", "secondary-fixed-dim": "#71dd7c", "secondary-container": "#8af793", "tertiary-fixed": "#dbe1ff", "outline-variant": "#e4bebc", "on-primary-fixed-variant": "#92001c", "on-secondary-fixed-variant": "#00531b", "surface-container-low": "#f6f3f2", "on-tertiary-fixed-variant": "#003ea8", "surface-tint": "#bb162c", "on-background": "#1b1b1b", "on-secondary-fixed": "#002106", "on-error": "#ffffff", "on-primary-fixed": "#410007", "on-surface": "#1b1b1b", "primary-container": "#db313f", "tertiary-container": "#316bf3", "on-tertiary-fixed": "#00174b", "surface": "#fcf9f8", "on-primary-container": "#fffbff", "error": "#ba1a1a", "surface-container-lowest": "#ffffff", "background": "#fcf9f8", "inverse-surface": "#313030", "surface-container-high": "#eae7e7", "surface-dim": "#dcd9d9", "on-tertiary-container": "#fefcff", "on-error-container": "#93000a", "on-tertiary": "#ffffff", "on-secondary-container": "#007328", "tertiary-fixed-dim": "#b4c5ff", "surface-bright": "#fcf9f8", "on-secondary": "#ffffff", "error-container": "#ffdad6", "secondary-fixed": "#8dfa96", "inverse-primary": "#ffb3b1", "tertiary": "#0051d5", "on-surface-variant": "#5b403f", "secondary": "#006e26", "surface-container-highest": "#e5e2e1", "surface-container": "#f0eded", "surface-variant": "#e5e2e1" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "space-xs": "0.25rem", "margin": "1rem", "space-md": "1rem", "gutter": "1rem", "space-xl": "2rem", "space-sm": "0.5rem" }, "fontFamily": { "body-md": ["Inter"], "label-lg": ["Inter"], "headline-sm": ["Inter"], "headline-xl": ["Inter"], "headline-md": ["Inter"], "body-sm": ["Inter"], "headline-lg": ["Inter"], "body-lg": ["Inter"], "label-sm": ["Inter"], "tabular-stat": ["Inter"], "headline-xl-mobile": ["Inter"], "label-md": ["Inter"] }, "fontSize": { "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-lg": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-sm": ["17px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-xl": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "headline-md": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.015em", "fontWeight": "700" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg": ["24px", { "lineHeight": "30px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "tabular-stat": ["22px", { "lineHeight": "26px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-xl-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.025em", "fontWeight": "800" }], "label-md": ["13px", { "lineHeight": "16px", "fontWeight": "600" }] } } } };</script><style>@layer base{html,body{width:100%;margin:0;padding:0;min-height:100vh;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background font-body-md text-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex flex-col justify-center"><div class="flex items-center gap-space-xs"><span class="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">SpotCheck</span></div><span class="font-label-sm text-label-sm text-on-surface-variant leading-none mt-1">Bangalore Concept Predictor</span></div><div class="flex items-center gap-space-sm"><div class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm tracking-wide">BLR v1.2</div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-28 bg-surface px-gutter"><div class="flex flex-col w-full pb-8">
+<!-- Interactive Empty State Container -->
+<div class="flex flex-col items-center justify-center px-4 pt-3 pb-6">
+<!-- Elevated Primary Container -->
+<div class="w-full bg-surface-container-lowest rounded-xl shadow-[0_4px_24px_rgba(28,28,28,0.06)] p-6 flex flex-col items-center relative overflow-hidden transition-all duration-300">
+<!-- Ambient decorative glow -->
+<div class="absolute -top-16 -right-16 w-36 h-36 bg-primary/5 rounded-full pointer-events-none blur-2xl"></div>
+<div class="absolute -bottom-16 -left-16 w-36 h-36 bg-tertiary-container/5 rounded-full pointer-events-none blur-2xl"></div>
+<!-- Stylized Storefront & Clipboard Vector Illustration Badge -->
+<div class="relative w-28 h-28 mb-5 flex items-center justify-center">
+<!-- Soft Circular Backing -->
+<div class="absolute inset-0 rounded-full bg-surface-container-low shadow-inner transform transition-transform duration-500 hover:scale-105"></div>
+<!-- Animated / Illustrated SVG Scene -->
+<svg class="relative z-10 w-24 h-24 text-primary" fill="none" viewbox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+<!-- Clipboard Base -->
+<rect class="fill-surface-container-lowest shadow-sm" height="72" rx="10" width="56" x="22" y="16"></rect>
+<path class="fill-surface-container-high" d="M22 26C22 20.4772 26.4772 16 32 16H68C73.5228 16 78 20.4772 78 26V30H22V26Z"></path>
+<!-- Clipboard Clip -->
+<rect class="fill-primary" height="10" rx="4" width="24" x="38" y="10"></rect>
+<circle class="fill-surface-container-lowest" cx="50" cy="15" r="2.5"></circle>
+<!-- Storefront Awning (Red and White Scallops) -->
+<path class="fill-primary" d="M28 35H72L70 47C70 47 66 49 63 47C60 45 57 49 54 47C51 45 48 49 45 47C42 45 39 49 36 47C33 45 29 47 29 47L28 35Z"></path>
+<!-- Awning Striping Accent -->
+<path class="fill-on-primary opacity-80" d="M37 35L38 47C39 48 41 48 42 47L43 35H37ZM50 35L50.5 47C52 48 53.5 47.5 54.5 35H50ZM63.5 35L62.5 47C63.5 47.5 65 48 66 47L65 35H63.5Z"></path>
+<!-- Cafe Front Door & Window Glazing -->
+<rect class="fill-surface-container" height="24" rx="2" width="14" x="34" y="52"></rect>
+<rect class="fill-surface-container-lowest" height="10" rx="1" width="8" x="37" y="55"></rect>
+<!-- Small Door Handle -->
+<circle class="fill-on-surface" cx="45" cy="65" r="1"></circle>
+<!-- Menu Blackboard Display Beside Door -->
+<rect class="fill-on-surface" height="18" rx="2.5" width="16" x="52" y="52"></rect>
+<line stroke="#ffffff" stroke-dasharray="1 1.5" stroke-linecap="round" stroke-width="1.5" x1="55" x2="65" y1="57" y2="57"></line>
+<line stroke="#ffffff" stroke-linecap="round" stroke-width="1.2" x1="55" x2="63" y1="61" y2="61"></line>
+<line stroke="#ffffff" stroke-linecap="round" stroke-width="1.2" x1="55" x2="61" y1="65" y2="65"></line>
+<!-- Playful Steam / Coffee Mug Micro Detail -->
+<g class="transform translate-x-1">
+<path class="fill-primary" d="M57 75H64C65.1046 75 66 75.8954 66 77V78H55V77C55 75.8954 55.8954 75 57 75Z"></path>
+<path class="text-primary" d="M58 72.5C57.5 71.5 59 71 58.5 70" stroke="currentColor" stroke-linecap="round" stroke-width="1"></path>
+<path class="text-primary" d="M62 73C61.5 72 63 71.5 62.5 70.5" stroke="currentColor" stroke-linecap="round" stroke-width="1"></path>
+</g>
+<!-- Floating Micro Sparkle / Pin Accent -->
+<circle class="fill-secondary-container" cx="77" cy="22" r="3"></circle>
+<circle class="fill-secondary" cx="77" cy="22" r="1.5"></circle>
+</svg>
+<!-- Floating Badge: Question Mark / Strategy Tooltip -->
+<div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-md animate-bounce duration-1000">
+<span class="material-symbols-outlined text-[18px]">lightbulb</span>
+</div>
+</div>
+<!-- Headline & Explanatory Text -->
+<h1 class="font-headline-lg text-headline-lg text-on-surface text-center tracking-tight">
+        Plan your opening
+      </h1>
+<p class="font-body-md text-body-md text-on-surface-variant text-center max-w-[280px] mt-2 mb-6 leading-relaxed">
+        First choose the concept you'll open in <span class="font-semibold text-on-surface">Compare</span>. Then ask me about space, staff, money, food cost, revenue and break-even.
+      </p>
+<!-- Primary Action CTA -->
+<button class="w-full h-[52px] bg-primary hover:bg-primary-container active:scale-[0.98] transition-all rounded-full flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(183,18,42,0.32)] text-on-primary font-label-lg text-label-lg group" id="btn-goto-compare" type="button">
+<span>Go to Compare</span>
+<span class="material-symbols-outlined text-[20px] transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>
+</button>
+<!-- Disclaimer Caption -->
+<span class="font-body-sm text-body-sm text-on-surface-variant/80 text-center mt-3 tracking-normal">
+        Estimates come from synthetic planning data.
+      </span>
+</div>
+<!-- Interactive Teaser / Feature Peek Deck -->
+<div class="w-full mt-5 flex flex-col gap-space-sm">
+<div class="flex items-center justify-between px-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Unlocks after concept selection</span>
+<span class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant/70">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+          3 Modules
+        </span>
+</div>
+<!-- Locked Previews Container -->
+<div class="grid grid-cols-1 gap-2 w-full">
+<!-- Item 1: Pre-Lease Checklist -->
+<div class="w-full bg-surface-container-low/70 rounded-xl p-3.5 flex items-center justify-between transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[19px]">checklist_rtl</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Pre-Lease Checklist</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">HVAC specs, extraction, FSSAI &amp; fire NOC</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 text-[18px]">lock</span>
+</div>
+<!-- Item 2: Breakeven & Target Margins -->
+<div class="w-full bg-surface-container-low/70 rounded-xl p-3.5 flex items-center justify-between transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[19px]">query_stats</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Breakeven &amp; Target Margins</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Capex amortisation, food cost % &amp; covers</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 text-[18px]">lock</span>
+</div>
+<!-- Item 3: Staffing & Dwell Pacing -->
+<div class="w-full bg-surface-container-low/70 rounded-xl p-3.5 flex items-center justify-between transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[19px]">groups</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-medium">Staffing &amp; Dwell Pacing</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Kitchen crew shift ratios &amp; table turns</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/40 text-[18px]">lock</span>
+</div>
+</div>
+</div>
+<!-- Suggested Fast-Track Micro Cards (Interactive Delight) -->
+<div class="w-full mt-5 bg-surface-container-lowest rounded-xl p-4 shadow-[0_2px_8px_rgba(28,28,28,0.04)]">
+<div class="flex items-center justify-between mb-3">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Popular Bangalore Concepts</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container/30 text-secondary font-label-sm text-label-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+          Live In Indiranagar
+        </span>
+</div>
+<div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+<!-- Sample Chip 1 -->
+<button class="concept-quick-chip flex items-center gap-2 bg-surface-container-low hover:bg-surface-container active:scale-95 px-3 py-2 rounded-full whitespace-nowrap transition-all text-left" type="button">
+<span class="text-base leading-none">☕</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface leading-tight font-semibold">Artisanal Roastery</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant leading-none text-[10px]">Indiranagar 12th Main</span>
+</div>
+</button>
+<!-- Sample Chip 2 -->
+<button class="concept-quick-chip flex items-center gap-2 bg-surface-container-low hover:bg-surface-container active:scale-95 px-3 py-2 rounded-full whitespace-nowrap transition-all text-left" type="button">
+<span class="text-base leading-none">🍲</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface leading-tight font-semibold">Cloud Biryani Depot</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant leading-none text-[10px]">HSR Sector 4</span>
+</div>
+</button>
+<!-- Sample Chip 3 -->
+<button class="concept-quick-chip flex items-center gap-2 bg-surface-container-low hover:bg-surface-container active:scale-95 px-3 py-2 rounded-full whitespace-nowrap transition-all text-left" type="button">
+<span class="text-base leading-none">🥗</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface leading-tight font-semibold">Clean Greens Bowl</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant leading-none text-[10px]">Koramangala 4th Blk</span>
+</div>
+</button>
+</div>
+</div>
+<!-- Mandatory Legal / Attribution Disclaimer -->
+<div class="w-full text-center mt-6 px-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant/70 leading-normal">
+        Not affiliated with Zomato · Estimates, not guarantees
+      </p>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    // Configure bottom bar active state for the Plan tab with top indicator line
+    const navLinks = document.querySelectorAll('nav a');
+    navLinks.forEach(link => {
+      const isPlanTab = link.getAttribute('data-path') === 'plan';
+      if (isPlanTab) {
+        link.classList.remove('text-on-surface-variant');
+        link.classList.add('text-primary', 'font-bold', 'relative');
+        
+        // Add active red top indicator line
+        const indicator = document.createElement('div');
+        indicator.className = 'absolute top-0 inset-x-3 h-0.5 bg-primary rounded-b-full transition-all';
+        link.appendChild(indicator);
+        
+        // Update icon if available
+        const iconSpan = link.querySelector('.material-symbols-outlined');
+        if (iconSpan) {
+          iconSpan.style.fontVariationSettings = "'FILL' 1";
+        }
+      } else {
+        link.classList.remove('text-primary', 'font-bold');
+        link.classList.add('text-on-surface-variant');
+      }
+    });
+
+    // Wire "Go to Compare" CTA and quick-select chips to route to Compare tab
+    const compareTriggers = document.querySelectorAll('#btn-goto-compare, .concept-quick-chip');
+    compareTriggers.forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const compareNav = document.querySelector('nav a[data-path="compare"]');
+        if (compareNav) {
+          // Playful ripple / feedback
+          el.style.transform = 'scale(0.96)';
+          setTimeout(() => {
+            el.style.transform = '';
+            compareNav.click();
+          }, 120);
+        }
+      });
+    });
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.06)]" data-active-classes="text-primary font-bold"><div class="grid grid-cols-4 items-center h-16"><a class="flex flex-col items-center justify-center h-full min-h-[44px] min-w-[44px] gap-0.5 text-on-surface-variant transition-colors" data-path="predictor" href="#"><span class="material-symbols-outlined text-[22px]">search</span><span class="font-label-sm text-label-sm">Predictor</span></a><a class="flex flex-col items-center justify-center h-full min-h-[44px] min-w-[44px] gap-0.5 text-on-surface-variant transition-colors" data-path="compare" href="#"><span class="material-symbols-outlined text-[22px]">balance</span><span class="font-label-sm text-label-sm">Compare</span></a><a aria-current="page" class="flex flex-col items-center justify-center h-full min-h-[44px] min-w-[44px] gap-0.5 transition-colors text-primary font-bold" data-path="plan" href="#"><span class="material-symbols-outlined text-[22px]">chat</span><span class="font-label-sm text-label-sm">Plan</span></a><a class="flex flex-col items-center justify-center h-full min-h-[44px] min-w-[44px] gap-0.5 text-on-surface-variant transition-colors" data-path="about" href="#"><span class="material-symbols-outlined text-[22px]">info</span><span class="font-label-sm text-label-sm">About</span></a></div></nav></body></html>

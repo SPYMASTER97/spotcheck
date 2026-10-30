@@ -1,0 +1,13 @@
+TestID	restaurant_name	location	primary_type	has_bar	online_order	book_table	n_cuisines	c_North_Indian	c_Chinese	c_South_Indian	c_Fast_Food	c_Biryani	c_Desserts	c_Beverages	c_Continental	c_Cafe	c_Street_Food	c_Italian	c_Bakery	cost_for_two	rating	high_rating
+string	string	discrete	discrete	discrete	discrete	discrete	continuous	discrete	discrete	discrete	discrete	discrete	discrete	discrete	discrete	discrete	discrete	discrete	discrete	continuous	continuous	discrete
+meta	meta																				meta	class
+T01	Hotel Sakti Saravana	Electronic City	Quick Bites	No	Yes	No	2	No	No	Yes	No	No	No	No	No	No	No	No	No	350	3.8	No
+T02	Sizzling Szechuan	Banaswadi	Casual Dining	No	Yes	No	3	No	Yes	No	No	No	No	No	No	No	No	No	No	600	3.9	No
+T03	Roundup Cafe	Koramangala 5th Block	Cafe	No	Yes	Yes	3	No	No	No	No	No	No	Yes	Yes	Yes	No	No	No	800	4.2	Yes
+T04	ReadyBowl	BTM	Delivery	No	Yes	No	4	Yes	No	Yes	No	Yes	No	No	No	No	No	No	No	400	3.7	No
+T05	Papacream	Sarjapur Road	Dessert Parlor	No	No	No	2	No	No	No	No	No	Yes	No	No	No	No	No	No	350	3.8	No
+T06	Jeff's - Royal Orchid Hotel	Old Airport Road	Bar	Yes	No	No	2	No	Yes	No	No	No	No	No	Yes	No	No	No	No	1800	3.9	No
+T07	Just Bake	Bannerghatta Road	Bakery	No	Yes	No	2	No	No	No	No	No	Yes	No	No	No	No	No	Yes	400	3.2	No
+T08	Mojo Pizza - 2X Toppings	JP Nagar	Takeaway	No	Yes	No	1	No	No	No	No	No	No	No	No	No	No	No	No	600	4.2	Yes
+T09	Drava	Koramangala 5th Block	Other	Yes	No	Yes	4	Yes	No	No	No	No	No	No	Yes	No	No	No	No	1500	4.4	Yes
+T10	Samarkand	Other	Casual Dining	No	No	Yes	2	Yes	No	No	No	No	No	No	No	No	No	No	No	1600	4.1	Yes

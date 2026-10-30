@@ -1,0 +1,10 @@
+# Exact versions used to train and save the .joblib models (Python 3.14).
+# A model must be loaded with the scikit-learn version that saved it.
+# Linux wheels for every pin exist for Python 3.12 and 3.13 (checked 2026-10-27): pick one of these on Streamlit Cloud.
+scikit-learn==1.9.1
+pandas==3.1.0
+numpy==2.5.4
+scipy==1.18.1
+joblib==1.6.0
+streamlit==1.66.1
+requests==2.34.2   # Plan chat: Gemini REST call (optional; the chat falls back to rules without a key)

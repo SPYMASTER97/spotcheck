@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><title>What If Comparison - SpotCheck</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary": "#b7122a", "inverse-surface": "#313030", "on-tertiary-fixed": "#00174b", "on-secondary": "#ffffff", "surface-container-high": "#eae7e7", "on-tertiary": "#ffffff", "on-tertiary-container": "#fefcff", "tertiary-container": "#316bf3", "tertiary": "#0051d5", "surface-container-highest": "#e5e2e1", "on-primary-container": "#fffbff", "on-error-container": "#93000a", "on-error": "#ffffff", "secondary-container": "#8af793", "on-primary": "#ffffff", "error": "#ba1a1a", "surface": "#fcf9f8", "secondary-fixed": "#8dfa96", "on-surface": "#1b1b1b", "background": "#fcf9f8", "secondary": "#006e26", "on-background": "#1b1b1b", "on-primary-fixed": "#410007", "on-primary-fixed-variant": "#92001c", "on-tertiary-fixed-variant": "#003ea8", "surface-variant": "#e5e2e1", "primary-fixed-dim": "#ffb3b1", "on-secondary-fixed-variant": "#00531b", "outline-variant": "#e4bebc", "surface-container": "#f0eded", "surface-bright": "#fcf9f8", "inverse-on-surface": "#f3f0ef", "surface-container-lowest": "#ffffff", "on-secondary-fixed": "#002106", "primary-container": "#db313f", "surface-container-low": "#f6f3f2", "on-surface-variant": "#5b403f", "surface-tint": "#bb162c", "on-secondary-container": "#007328", "outline": "#8f6f6e", "secondary-fixed-dim": "#71dd7c", "inverse-primary": "#ffb3b1", "tertiary-fixed-dim": "#b4c5ff", "error-container": "#ffdad6", "tertiary-fixed": "#dbe1ff", "surface-dim": "#dcd9d9", "primary-fixed": "#ffdad8" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "gutter": "1rem", "margin": "1rem", "space-xl": "2rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "space-xs": "0.25rem", "space-md": "1rem" }, fontFamily: { "headline-xl": ["Inter"], "tabular-stat": ["Inter"], "body-lg": ["Inter"], "headline-sm": ["Inter"], "label-md": ["Inter"], "headline-xl-mobile": ["Inter"], "headline-lg": ["Inter"], "label-lg": ["Inter"], "body-md": ["Inter"], "headline-md": ["Inter"], "body-sm": ["Inter"], "label-sm": ["Inter"] }, fontSize: { "headline-xl": ["36px", { lineHeight: "42px", letterSpacing: "-0.03em", fontWeight: "800" }], "tabular-stat": ["22px", { lineHeight: "26px", letterSpacing: "-0.02em", fontWeight: "700" }], "body-lg": ["16px", { lineHeight: "24px", letterSpacing: "-0.005em", fontWeight: "400" }], "headline-sm": ["17px", { lineHeight: "22px", letterSpacing: "-0.01em", fontWeight: "600" }], "label-md": ["13px", { lineHeight: "16px", fontWeight: "600" }], "headline-xl-mobile": ["28px", { lineHeight: "34px", letterSpacing: "-0.025em", fontWeight: "800" }], "headline-lg": ["24px", { lineHeight: "30px", letterSpacing: "-0.02em", fontWeight: "700" }], "label-lg": ["15px", { lineHeight: "20px", letterSpacing: "-0.01em", fontWeight: "600" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "headline-md": ["20px", { lineHeight: "26px", letterSpacing: "-0.015em", fontWeight: "700" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "label-sm": ["11px", { lineHeight: "14px", letterSpacing: "0.04em", fontWeight: "700" }] } } } };</script><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="SpotCheck Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UWxOQdTcKWnPwjYfr0xbp6SqZDe3-BrlpbG0ypOdLjvZ4ZMp7L4ByJg4EOBuGm_ozWVqdZuZLvrWsWEZmvARcBM5gMbaJAqzu1UFEyHU6vc2hAzcTKyGMJit_5i_6FISuTS9u6elAhvZ0f6BzU3SdXJ7D8uYisnNBtN9BrUZUEINQqvHevgMKRmF0DdKh-Fa5yppwaEP8GaaslinwjKApPY0ytw_7T4v0wVee8kLlZ"/><div class="flex flex-col"><div class="flex items-center gap-1.5"><span class="font-headline-sm text-headline-sm text-primary tracking-tight">SpotCheck</span><span class="font-body-sm text-body-sm text-on-surface-variant font-medium">• What If Comparison</span></div><span class="font-label-sm text-label-sm text-on-surface-variant">Bangalore Predictor • 9,244 spots analyzed</span></div></div><div class="flex items-center gap-space-xs"><button aria-label="Open Menu" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container active:scale-95 transition-all" id="menu-btn"><span class="material-symbols-outlined text-[24px]">menu</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><div class="fixed inset-0 z-50 bg-inverse-surface/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300" id="drawer-backdrop"></div><aside class="fixed top-0 right-0 z-50 h-full w-[85vw] max-w-[360px] bg-surface shadow-[4px_0_24px_rgba(0,0,0,0.12)] transform translate-x-full transition-transform duration-300 ease-out flex flex-col justify-between pt-safe pb-safe" id="drawer-menu"><div class="p-gutter flex flex-col gap-space-md"><div class="flex items-center justify-between pb-space-sm"><div class="flex items-center gap-2"><img alt="SpotCheck Logo" class="h-7 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UWxOQdTcKWnPwjYfr0xbp6SqZDe3-BrlpbG0ypOdLjvZ4ZMp7L4ByJg4EOBuGm_ozWVqdZuZLvrWsWEZmvARcBM5gMbaJAqzu1UFEyHU6vc2hAzcTKyGMJit_5i_6FISuTS9u6elAhvZ0f6BzU3SdXJ7D8uYisnNBtN9BrUZUEINQqvHevgMKRmF0DdKh-Fa5yppwaEP8GaaslinwjKApPY0ytw_7T4v0wVee8kLlZ"/><span class="font-headline-sm text-headline-sm text-primary">SpotCheck</span></div><button aria-label="Close Menu" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container active:scale-95" id="close-drawer-btn"><span class="material-symbols-outlined text-[22px]">close</span></button></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant px-space-xs">Intelligence Tools</span><a class="flex items-center gap-3 px-space-md py-3 rounded-lg text-on-surface hover:bg-surface-container active:bg-surface-container-high transition-colors" data-path="concept-predictor" href="#"><span class="material-symbols-outlined text-primary text-[20px]">restaurant_menu</span><span class="font-label-lg text-label-lg">Check a concept</span></a><a class="flex items-center gap-3 px-space-md py-3 rounded-lg text-on-surface hover:bg-surface-container active:bg-surface-container-high transition-colors" data-path="what-if-comparison" href="#"><span class="material-symbols-outlined text-tertiary text-[20px]">compare_arrows</span><span class="font-label-lg text-label-lg">Compare what-ifs</span></a><a class="flex items-center gap-3 px-space-md py-3 rounded-lg text-on-surface hover:bg-surface-container active:bg-surface-container-high transition-colors" data-path="dataset-insights" href="#"><span class="material-symbols-outlined text-secondary text-[20px]">dataset</span><span class="font-label-lg text-label-lg">About &amp; Dataset</span></a></div><div class="mt-space-md p-space-md rounded-xl bg-surface-container-low flex flex-col gap-1"><span class="font-label-md text-label-md text-on-surface">Bangalore Micro-markets</span><p class="font-body-sm text-body-sm text-on-surface-variant">Indiranagar, Koramangala, HSR Layout, Whitefield &amp; 14 other delivery clusters indexed.</p></div></div><div class="p-gutter flex flex-col gap-space-xs text-center"><div class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-space-sm py-1.5 rounded-DEFAULT">Anonymous Session • Zero Barrier Utility</div><p class="font-body-sm text-body-sm text-outline">Estimates only • Model trained on 9,244 Bangalore outlets • Not affiliated with Zomato</p></div></aside><main class="flex-1 w-full pt-16 bg-surface pb-28"><div class="flex flex-col w-full px-gutter pb-6">
+<!-- Report Sheet Container -->
+<div class="w-full bg-surface-container-lowest rounded-xl shadow-md p-space-md flex flex-col gap-space-md">
+<!-- Report Header & Meta Line -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface tracking-tight flex items-center gap-1.5"><span>📍🍽️</span> Your SpotCheck summary</span>
+<button aria-label="Share concept summary" class="w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center text-primary active:scale-90 transition-transform" id="share-report-btn">
+<span class="material-symbols-outlined text-[18px]">share</span>
+</button>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span>Generated: 26 Oct 2026</span>
+<span class="bg-surface-container-high px-2 py-0.5 rounded-full text-on-surface font-semibold">Report #SC-9244</span>
+</div>
+<!-- Muted Callout Note -->
+<div class="mt-1 flex items-start gap-2 bg-surface-container-low p-2.5 rounded-lg text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-outline mt-0.5 shrink-0">lock_reset</span>
+<p class="font-body-sm text-body-sm leading-tight">
+          Nothing is saved online. Download or share this summary to keep it.
+        </p>
+</div>
+</div>
+<!-- Micro-market Visual Anchor -->
+<div class="w-full h-24 rounded-lg overflow-hidden relative shadow-sm">
+<div class="w-full h-full bg-cover bg-center" data-location="Koramangala 5th Block, Bangalore" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAT_KZTTIR6jMLA48TZrnzl2Zq0NVrIUYKuN2fF3MN_ftOq3vjRBx7RVim5CoBLEj9L2t3kFq3HvOuJRrOwBFBrLo25thHhvPCWmJQmZOxfyssl3S8vCh0EsXs9-nfs6dTb1drut0C5BW020YRu5gc-HuLxH3id3N1juSw2pzgkRZlew9uQMJjfuygOQFtEF5n6bLXzaQZgI5KdZJ82U1a-WFdCplTnnQnUkVQmxSQ')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-inverse-surface/20 to-transparent flex items-end p-2.5">
+<div class="flex items-center gap-1.5 text-on-primary">
+<span class="material-symbols-outlined text-[16px]">location_on</span>
+<span class="font-label-md text-label-md">Koramangala 5th Block Cluster</span>
+</div>
+</div>
+</div>
+<!-- Section 1: Your Concept -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">storefront</span>
+          Your concept
+        </h2>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Parameters</span>
+</div>
+<div class="bg-surface-container-low rounded-lg p-3 flex flex-col gap-2">
+<div class="flex items-center justify-between py-1">
+<div class="flex items-center gap-2">
+<span class="text-[16px]">📍</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Location</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface font-semibold text-right">Koramangala 5th Block</span>
+</div>
+<div class="flex items-center justify-between py-1">
+<div class="flex items-center gap-2">
+<span class="text-[16px]">☕</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Format</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Cafe</span>
+</div>
+<div class="flex items-center justify-between py-1">
+<div class="flex items-center gap-2">
+<span class="text-[16px]">🍷</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Bar</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant">No alcohol</span>
+</div>
+<div class="flex items-center justify-between py-1">
+<div class="flex items-center gap-2">
+<span class="text-[16px]">📱</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Delivery</span>
+</div>
+<span class="font-label-md text-label-md text-secondary flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Online ordering enabled
+          </span>
+</div>
+<div class="flex items-center justify-between py-1">
+<div class="flex items-center gap-2">
+<span class="text-[16px]">📅</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Dine-in</span>
+</div>
+<span class="font-label-md text-label-md text-secondary flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Table booking enabled
+          </span>
+</div>
+<div class="flex items-center justify-between py-1">
+<div class="flex items-center gap-2 shrink-0">
+<span class="text-[16px]">🥤🥗☕</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Cuisines</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface text-right truncate pl-2 font-medium">Beverages, Continental, Cafe (3)</span>
+</div>
+<div class="flex items-center justify-between py-1 bg-surface-container-lowest p-2 rounded">
+<div class="flex items-center gap-2">
+<span class="text-[16px]">💰</span>
+<span class="font-body-md text-body-md text-on-surface">Target Spend</span>
+</div>
+<span class="font-tabular-stat text-tabular-stat text-primary font-bold">₹800 <span class="font-body-sm text-body-sm text-on-surface-variant font-normal">for two</span></span>
+</div>
+</div>
+</div>
+<!-- Section 2: Results Benchmark Grid -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">insights</span>
+          Results
+        </h2>
+<span class="font-label-sm text-label-sm text-secondary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">verified</span> High confidence
+        </span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Market Price Tile -->
+<div class="bg-surface-container-low rounded-xl p-3 flex flex-col justify-between shadow-sm">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Market price</span>
+<div class="mt-1 flex items-baseline gap-1">
+<span class="font-headline-xl-mobile text-headline-xl-mobile text-on-surface tracking-tight">₹718</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">(₹582 – ₹854 span)</span>
+</div>
+<div class="mt-3">
+<span class="inline-flex items-center gap-1 bg-secondary-container px-2 py-0.5 rounded text-on-secondary-container font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[13px]">check</span> In line with market
+            </span>
+</div>
+</div>
+<!-- Rating Outlook Tile -->
+<div class="bg-surface-container-low rounded-xl p-3 flex flex-col justify-between shadow-sm">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Rating outlook</span>
+<div class="mt-1 flex items-baseline gap-1">
+<span class="font-headline-xl-mobile text-headline-xl-mobile text-secondary tracking-tight">92%</span>
+<span class="font-headline-sm text-headline-sm text-secondary">★</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Chance of 4.0+</span>
+</div>
+<div class="mt-3">
+<span class="inline-flex items-center gap-1 bg-secondary-fixed text-on-secondary-fixed px-2 py-0.5 rounded font-label-sm text-label-sm font-bold">
+              Strong viability
+            </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 3: What-ifs Comparison -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">compare</span>
+          What-if scenarios
+        </h2>
+<span class="font-label-sm text-label-sm text-outline">Simulated delta</span>
+</div>
+<div class="bg-surface-container-low rounded-xl overflow-hidden flex flex-col"><div class="p-3 bg-surface-container-lowest flex flex-col gap-1.5 shadow-[0_1px_3px_rgba(0,0,0,0.03)]"><div class="flex items-center justify-between"><span class="font-label-md text-label-md text-on-surface flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-primary text-on-primary font-bold text-[11px] flex items-center justify-center shrink-0">A</span> Your concept (Base)</span><span class="font-label-md text-label-md text-secondary font-bold">92% ★</span></div><div class="flex items-center justify-between pl-6.5 text-body-sm text-body-sm"><span class="text-on-surface-variant">Market: <strong class="text-on-surface font-semibold">₹718</strong></span><span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded font-label-sm text-label-sm font-bold">In line</span></div></div><div class="p-3 flex flex-col gap-1.5 border-t border-surface-container"><div class="flex items-center justify-between"><div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-surface-container-high text-on-surface-variant font-bold text-[11px] flex items-center justify-center shrink-0">B</span> No table booking</span><span class="text-[11px] text-on-surface-variant pl-6.5">Changed: Dine-in table booking disabled</span></div><span class="font-label-md text-label-md text-on-surface font-bold">68% ★</span></div><div class="flex items-center justify-between pl-6.5 text-body-sm text-body-sm"><span class="text-on-surface-variant">Market: <strong class="text-on-surface font-semibold">₹628</strong></span><span class="bg-error-container text-on-error-container px-2 py-0.5 rounded font-label-sm text-label-sm font-bold">Above market</span></div></div><div class="p-3 bg-surface-container-lowest/50 flex flex-col gap-1.5 border-t border-surface-container"><div class="flex items-center justify-between"><div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-surface-container-high text-on-surface-variant font-bold text-[11px] flex items-center justify-center shrink-0">C</span> ₹1,200 target price</span><span class="text-[11px] text-on-surface-variant pl-6.5">Changed: Spend for two increased from ₹800 to ₹1,200</span></div><span class="font-label-md text-label-md text-secondary font-bold">95% ★</span></div><div class="flex items-center justify-between pl-6.5 text-body-sm text-body-sm"><span class="text-on-surface-variant">Market: <strong class="text-on-surface font-semibold">₹718</strong></span><span class="bg-error-container text-on-error-container px-2 py-0.5 rounded font-label-sm text-label-sm font-bold">Above market</span></div></div></div>
+</div><div class="flex flex-col gap-space-xs"><div class="flex items-center justify-between"><h2 class="font-headline-sm text-headline-sm text-primary flex items-center gap-1.5"><span>📋</span> My opening plan · Your concept (Base)</h2><span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Base Plan</span></div><div class="bg-surface-container-low rounded-xl p-3 flex flex-col gap-2.5"><div class="bg-primary/10 text-primary px-3 py-1.5 rounded-lg flex items-center justify-between font-label-sm text-label-sm font-semibold"><span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">tune</span> Your facts:</span><span>budget ₹100 lakh · 20 staff</span></div><div class="flex flex-col divide-y divide-surface-container-high/60 text-body-md"><div class="flex items-center justify-between py-1.5"><div class="flex items-center gap-2"><span class="text-[16px]">📐</span><span class="text-on-surface-variant font-medium">Floor area</span></div><div class="text-right"><span class="font-label-md text-label-md text-on-surface font-bold">≈ 1,240 sq ft</span> <span class="font-body-sm text-body-sm text-on-surface-variant">(1,160–1,320)</span></div></div><div class="flex items-center justify-between py-1.5"><div class="flex items-center gap-2"><span class="text-[16px]">👥</span><span class="text-on-surface-variant font-medium">Staff</span></div><div class="text-right"><span class="font-label-md text-label-md text-on-surface font-bold">≈ 13 people</span> <span class="font-body-sm text-body-sm text-on-surface-variant">(12–14)</span></div></div><div class="flex items-center justify-between py-1.5"><div class="flex items-center gap-2"><span class="text-[16px]">💰</span><span class="text-on-surface-variant font-medium">Investment</span></div><div class="text-right"><span class="font-label-md text-label-md text-on-surface font-bold">≈ ₹50.3 lakh</span> <span class="font-body-sm text-body-sm text-on-surface-variant">(46.3–54.2)</span></div></div><div class="flex items-center justify-between py-1.5"><div class="flex items-center gap-2"><span class="text-[16px]">🥘</span><span class="text-on-surface-variant font-medium">Food cost</span></div><div class="text-right"><span class="font-label-md text-label-md text-on-surface font-bold">≈ 26.2% of sales</span> <span class="font-body-sm text-body-sm text-on-surface-variant">(24.6–27.8)</span></div></div><div class="flex items-center justify-between py-1.5"><div class="flex items-center gap-2"><span class="text-[16px]">📈</span><span class="text-on-surface-variant font-medium">Revenue</span></div><div class="text-right"><span class="font-label-md text-label-md text-on-surface font-bold">≈ ₹11.4 lakh / mo</span> <span class="font-body-sm text-body-sm text-on-surface-variant">(10.4–12.3)</span></div></div><div class="flex items-center justify-between py-1.5"><div class="flex items-center gap-2"><span class="text-[16px]">⏱️</span><span class="text-on-surface-variant font-medium">Break-even</span></div><div class="text-right"><span class="font-label-md text-label-md text-on-surface font-bold">≈ 19 months</span> <span class="font-body-sm text-body-sm text-on-surface-variant">(Projected payback period)</span></div></div></div><div class="pt-1 text-[11px] text-on-surface-variant leading-tight flex items-start gap-1.5"><span class="material-symbols-outlined text-[14px] text-outline mt-0.5 shrink-0">info</span><span>Plan estimates come from synthetic planning data; price and rating come from 9,244 real Zomato Bangalore restaurants.</span></div></div></div>
+<!-- Section 4: Keep in Mind -->
+<div class="flex flex-col gap-space-xs">
+<h2 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-outline text-[20px]">info</span>
+        Keep in mind
+      </h2>
+<div class="bg-surface-container-low rounded-xl p-3 flex flex-col gap-2.5">
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5">restaurant</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Ratings also depend on food, hospitality, and hygiene – the machine learning models cannot measure your kitchen craft.
+          </p>
+</div>
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5">history_edu</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Trained on Bangalore restaurant retail records from ~2019.
+          </p>
+</div>
+<div class="flex items-start gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary shrink-0 mt-0.5">query_stats</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Reflects statistical correlations in existing outlets, not guaranteed cause and effect.
+          </p>
+</div>
+</div>
+</div>
+<!-- Footer Credits -->
+<div class="pt-2 px-1 text-center flex flex-col gap-1">
+<p class="font-body-sm text-body-sm text-outline leading-tight">
+        Data: ‘Zomato Bangalore Restaurants’ by Himanshu Poddar, Kaggle (about 2019). Models: Random Forest (price), Logistic Regression (rating). SpotCheck – MICA ML Capstone. Not affiliated with Zomato.
+      </p>
+</div>
+</div>
+<!-- Bottom Action Buttons Group -->
+<div class="mt- space-md flex flex-col gap-space-sm pt-2"><button class="w-full h-[52px] bg-primary text-on-primary rounded-full font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(183,18,42,0.25)] active:scale-[0.98] transition-transform" id="download-summary-btn"><span class="material-symbols-outlined text-[20px]">download</span><span>⬇ Download summary (HTML)</span></button><button class="w-full h-[44px] bg-surface-container-lowest text-on-surface border border-surface-variant rounded-full font-label-lg text-label-lg font-semibold flex items-center justify-center gap-1.5 shadow-sm active:bg-surface-container-low transition-colors" id="new-concept-btn"><span class="material-symbols-outlined text-[18px]">arrow_back</span><span>Back to Plan</span></button></div>
+</div>
+<script>
+  (function() {
+    const downloadBtn = document.getElementById('download-summary-btn');
+    const shareBtn = document.getElementById('share-report-btn');
+    const newConceptBtn = document.getElementById('new-concept-btn');
+
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', function() {
+        const originalContent = downloadBtn.innerHTML;
+        downloadBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span><span>Preparing PDF...</span>';
+        downloadBtn.disabled = true;
+        setTimeout(() => {
+          downloadBtn.innerHTML = '<span class="material-symbols-outlined text-[20px]">check</span><span>Report saved!</span>';
+          setTimeout(() => {
+            downloadBtn.innerHTML = originalContent;
+            downloadBtn.disabled = false;
+          }, 2000);
+        }, 1200);
+      });
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function() {
+        if (navigator.share) {
+          navigator.share({
+            title: 'SpotCheck - Concept Summary',
+            text: 'Feasibility benchmark for Cafe in Koramangala 5th Block (₹800/two)',
+            url: window.location.href
+          }).catch(() => {});
+        } else {
+          navigator.clipboard.writeText(window.location.href);
+          const icon = shareBtn.querySelector('span');
+          if (icon) {
+            icon.innerText = 'done';
+            setTimeout(() => { icon.innerText = 'share'; }, 1800);
+          }
+        }
+      });
+    }
+
+    if (newConceptBtn) {
+      newConceptBtn.addEventListener('click', function() {
+        const predictorLink = document.querySelector('a[data-path="concept-predictor"]');
+        if (predictorLink) {
+          predictorLink.click();
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.06)]" data-active-classes="text-primary font-bold"><div class="flex justify-around items-center h-16 px-gutter"><a class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-12 text-on-surface-variant hover:text-on-surface transition-colors active:scale-95" data-path="concept-predictor" href="#"><span class="material-symbols-outlined text-[24px]">analytics</span><span class="font-label-sm text-label-sm">Predictor</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-12 text-on-surface-variant hover:text-on-surface transition-colors active:scale-95" data-path="what-if-comparison" href="#"><span class="material-symbols-outlined text-[24px]">balance</span><span class="font-label-sm text-label-sm">Compare</span></a><a class="flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-12 text-on-surface-variant hover:text-on-surface transition-colors active:scale-95" data-path="dataset-insights" href="#"><span class="material-symbols-outlined text-[24px]">query_stats</span><span class="font-label-sm text-label-sm">Data Intel</span></a></div></nav><script>(function(){const btn=document.getElementById('menu-btn');const drawer=document.getElementById('drawer-menu');const backdrop=document.getElementById('drawer-backdrop');const close=document.getElementById('close-drawer-btn');function openDrawer(){drawer.classList.remove('translate-x-full');backdrop.classList.remove('opacity-0','pointer-events-none');}function closeDrawer(){drawer.classList.add('translate-x-full');backdrop.classList.add('opacity-0','pointer-events-none');}if(btn)btn.addEventListener('click',openDrawer);if(close)close.addEventListener('click',closeDrawer);if(backdrop)backdrop.addEventListener('click',closeDrawer);})();</script></body></html>

@@ -18,3 +18,12 @@ venv/
 
 # OS
 .DS_Store
+
+# Full project archive (team decision 2026-10-30): archive/ keeps everything, including the cleaned/derived
+# data, workbook and Orange files. Still never: zomato.csv, secrets, OS junk.
+!archive/**
+archive/**/zomato.csv
+archive/**/secrets.toml
+archive/**/.env
+archive/**/.DS_Store
+archive/**/__pycache__/

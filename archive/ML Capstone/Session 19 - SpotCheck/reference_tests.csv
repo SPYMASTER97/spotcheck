@@ -1,0 +1,11 @@
+TestID,restaurant_name,location,primary_type,has_bar,online_order,book_table,n_cuisines,c_North_Indian,c_Chinese,c_South_Indian,c_Fast_Food,c_Biryani,c_Desserts,c_Beverages,c_Continental,c_Cafe,c_Street_Food,c_Italian,c_Bakery,cost_for_two,rating,high_rating,Predicted cost (₹),Error (₹),Abs error (₹),P(4.0+),Predicted 4.0+ (0.5),Correct?
+T01,Hotel Sakti Saravana,Electronic City,Quick Bites,No,Yes,No,2,No,No,Yes,No,No,No,No,No,No,No,No,No,350,3.8,No,335.3,-14.7,14.7,0.0914,No,Yes
+T02,Sizzling Szechuan,Banaswadi,Casual Dining,No,Yes,No,3,No,Yes,No,No,No,No,No,No,No,No,No,No,600,3.9,No,722.5,122.5,122.5,0.0600,No,Yes
+T03,Roundup Cafe,Koramangala 5th Block,Cafe,No,Yes,Yes,3,No,No,No,No,No,No,Yes,Yes,Yes,No,No,No,800,4.2,Yes,718.2,-81.8,81.8,0.9166,Yes,Yes
+T04,ReadyBowl,BTM,Delivery,No,Yes,No,4,Yes,No,Yes,No,Yes,No,No,No,No,No,No,No,400,3.7,No,408.8,8.8,8.8,0.1419,No,Yes
+T05,Papacream,Sarjapur Road,Dessert Parlor,No,No,No,2,No,No,No,No,No,Yes,No,No,No,No,No,No,350,3.8,No,256.9,-93.1,93.1,0.2244,No,Yes
+T06,Jeff's - Royal Orchid Hotel,Old Airport Road,Bar,Yes,No,No,2,No,Yes,No,No,No,No,No,Yes,No,No,No,No,1800,3.9,No,1331.0,-469.0,469.0,0.2308,No,Yes
+T07,Just Bake,Bannerghatta Road,Bakery,No,Yes,No,2,No,No,No,No,No,Yes,No,No,No,No,No,Yes,400,3.2,No,423.2,23.2,23.2,0.1392,No,Yes
+T08,Mojo Pizza - 2X Toppings,JP Nagar,Takeaway,No,Yes,No,1,No,No,No,No,No,No,No,No,No,No,No,No,600,4.2,Yes,329.8,-270.2,270.2,0.2109,No,No
+T09,Drava,Koramangala 5th Block,Other,Yes,No,Yes,4,Yes,No,No,No,No,No,No,Yes,No,No,No,No,1500,4.4,Yes,1197.5,-302.5,302.5,0.9120,Yes,Yes
+T10,Samarkand,Other,Casual Dining,No,No,Yes,2,Yes,No,No,No,No,No,No,No,No,No,No,No,1600,4.1,Yes,1470.4,-129.6,129.6,0.7840,Yes,Yes

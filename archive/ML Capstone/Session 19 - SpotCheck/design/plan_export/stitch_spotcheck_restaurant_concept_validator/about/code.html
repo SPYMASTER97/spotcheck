@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline": "#8f6f6e", "on-primary": "#ffffff", "inverse-on-surface": "#f3f0ef", "primary-fixed-dim": "#ffb3b1", "primary": "#b7122a", "primary-fixed": "#ffdad8", "secondary-fixed-dim": "#71dd7c", "secondary-container": "#8af793", "tertiary-fixed": "#dbe1ff", "outline-variant": "#e4bebc", "on-primary-fixed-variant": "#92001c", "on-secondary-fixed-variant": "#00531b", "surface-container-low": "#f6f3f2", "on-tertiary-fixed-variant": "#003ea8", "surface-tint": "#bb162c", "on-background": "#1b1b1b", "on-secondary-fixed": "#002106", "on-error": "#ffffff", "on-primary-fixed": "#410007", "on-surface": "#1b1b1b", "primary-container": "#db313f", "tertiary-container": "#316bf3", "on-tertiary-fixed": "#00174b", "surface": "#fcf9f8", "on-primary-container": "#fffbff", "error": "#ba1a1a", "surface-container-lowest": "#ffffff", "background": "#fcf9f8", "inverse-surface": "#313030", "surface-container-high": "#eae7e7", "surface-dim": "#dcd9d9", "on-tertiary-container": "#fefcff", "on-error-container": "#93000a", "on-tertiary": "#ffffff", "on-secondary-container": "#007328", "tertiary-fixed-dim": "#b4c5ff", "surface-bright": "#fcf9f8", "on-secondary": "#ffffff", "error-container": "#ffdad6", "secondary-fixed": "#8dfa96", "inverse-primary": "#ffb3b1", "tertiary": "#0051d5", "on-surface-variant": "#5b403f", "secondary": "#006e26", "surface-container-highest": "#e5e2e1", "surface-container": "#f0eded", "surface-variant": "#e5e2e1" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "space-xs": "0.25rem", "margin": "1rem", "space-md": "1rem", "gutter": "1rem", "space-xl": "2rem", "space-sm": "0.5rem" }, "fontFamily": { "body-md": ["Inter"], "label-lg": ["Inter"], "headline-sm": ["Inter"], "headline-xl": ["Inter"], "headline-md": ["Inter"], "body-sm": ["Inter"], "headline-lg": ["Inter"], "body-lg": ["Inter"], "label-sm": ["Inter"], "tabular-stat": ["Inter"], "headline-xl-mobile": ["Inter"], "label-md": ["Inter"] }, "fontSize": { "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-lg": ["15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-sm": ["17px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-xl": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "headline-md": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.015em", "fontWeight": "700" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-lg": ["24px", { "lineHeight": "30px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "tabular-stat": ["22px", { "lineHeight": "26px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-xl-mobile": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.025em", "fontWeight": "800" }], "label-md": ["13px", { "lineHeight": "16px", "fontWeight": "600" }] } } } };</script><style>@layer base{html,body{width:100%;margin:0;padding:0;min-height:100vh;}body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-background font-body-md text-body-md text-on-surface antialiased flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex flex-col justify-center"><div class="flex items-center gap-space-xs"><span class="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none">SpotCheck</span></div><span class="font-label-sm text-label-sm text-on-surface-variant leading-none mt-1">Bangalore Concept Predictor</span></div><div class="flex items-center gap-space-sm"><div class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm tracking-wide">BLR v1.2</div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-28 bg-surface px-gutter"><div class="flex flex-col w-full">
+<!-- Interactive Micro-Header Notice -->
+<div class="mb-4">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm tracking-wide shadow-sm">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+      MICA ML CAPSTONE PROJECT
+    </div>
+<h1 class="font-headline-xl-mobile text-headline-xl-mobile text-on-surface mt-2 tracking-tight">
+      How SpotCheck works
+    </h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+      Transparent, model-driven intelligence for Bangalore food ventures before signing a lease.
+    </p>
+</div>
+<!-- Visual Narrative Collage / Spotlights -->
+<div class="grid grid-cols-2 gap-2 mb-4">
+<div class="relative rounded-xl overflow-hidden bg-surface-container-high h-28 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A lively authentic South Indian filter coffee cafe in Bangalore Indiranagar with steel tumblers, warm teakwood tables, ambient morning sunlight, high fidelity street view, rich cinematic colors matching warm urban Bengaluru aesthetics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5QD_fg92TxKBemo4QdiocwPVCWgsuWh8V_L3ckavHprEvzEu3sQ6dFwfmh-WptvIO_DsetZGYgejllkuV3m3cP_8Bxe9sxp3yTm1ij-dXH1Oyz5uPegn0PRX-r9zpYVA-_fg-HvrwLKjgRhonnJ3R4ynuYKOIhp6bqY45CZ_HjqZ1bzYy51eOijE1778z1x_MXnoUneCK17PGzMLWjQqpI9e26Nh6vrBvc0Mvn7ftFJZf8sVrqpsz"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-background/80 via-transparent to-transparent flex items-end p-2">
+<span class="font-label-sm text-label-sm text-surface-container-lowest flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span> Indiranagar Cafe
+        </span>
+</div>
+</div>
+<div class="relative rounded-xl overflow-hidden bg-surface-container-high h-28 shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A trendy modern cloud kitchen and microbrewery counter in Koramangala Bangalore with stainless steel pans, artisanal spices, vibrant warm lighting, natural architectural depth, photorealistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_U6NoPKZY7XRsLBlK6rB9meS_lX-2TfLHTQ7TY2weDYeatzO-Hx6yowlBRmyv4ZWSSUspnfBA97EyEreG237DFKqx1RXRGNj6soscy8VtnfuvTaV_spLFp2-hSIv2apY0qnbTvuDV0Llz6NIgvGbmTg3Lwbk79dvh5Rk_8sSi1LXhYtW8IZJDPGURo-1OeXxdWmOkfE12--1ajovysMo4LN4FfSxM762NofasIMLu7YaZqgWFthMC"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-background/80 via-transparent to-transparent flex items-end p-2">
+<span class="font-label-sm text-label-sm text-surface-container-lowest flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed"></span> Koramangala Hub
+        </span>
+</div>
+</div>
+</div>
+<!-- Card 1: 3 Quick Steps Workflow -->
+<section class="bg-surface-container-lowest rounded-xl p-4 shadow-sm mb-4">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
+<span class="material-symbols-outlined text-[18px]">alt_route</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">3 quick steps</h2>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-bold">ZERO FRICTION</span>
+</div>
+<div class="space-y-3 relative">
+<!-- Vertical connecting stem -->
+<div class="absolute left-4 top-4 bottom-4 w-0.5 bg-surface-container-high -z-0"></div>
+<!-- Step 1 -->
+<div class="flex items-start gap-3 relative z-10">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0 text-base">
+          📝
+        </div>
+<div class="bg-surface-container-low rounded-lg p-2.5 flex-1">
+<span class="font-label-md text-label-md text-on-surface block">Step 1: Describe your idea</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+            Pinpoint cluster, dining format, target cuisines, and planned budget tier.
+          </p>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="flex items-start gap-3 relative z-10">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0 text-base">
+          🤖
+        </div>
+<div class="bg-surface-container-low rounded-lg p-2.5 flex-1">
+<span class="font-label-md text-label-md text-on-surface block">Step 2: Two predictive engines</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+            Algorithms benchmark against 9,244 real Bangalore dining destinations.
+          </p>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="flex items-start gap-3 relative z-10">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center shrink-0 text-base">
+          📊
+        </div>
+<div class="bg-surface-container-low rounded-lg p-2.5 flex-1">
+<span class="font-label-md text-label-md text-on-surface block">Step 3: Actionable intelligence</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+            Get an exact price viability sanity check and localized rating outlook.
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Card 2: How accurate is it? (10-Fold Validated) -->
+<section class="bg-surface-container-lowest rounded-xl p-4 shadow-sm mb-4">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-[18px]">model_training</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">How accurate is it?</h2>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">
+        10-Fold Validated
+      </span>
+</div>
+<div class="grid grid-cols-1 gap-2.5">
+<!-- Metric: Price Precision -->
+<div class="bg-surface-container-low rounded-xl p-3 flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-xl">💰</span>
+<div>
+<span class="font-label-md text-label-md text-on-surface block leading-tight">Average Ticket Check</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Random Forest Regressor</span>
+</div>
+</div>
+<div class="text-right">
+<span class="font-tabular-stat text-tabular-stat text-primary block leading-none">±₹136</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Mean Abs. Error</span>
+</div>
+</div>
+<!-- Compact Inline Sparkline Indicator -->
+<div class="w-full bg-surface-container-high rounded-full h-1.5 overflow-hidden flex">
+<div class="bg-primary h-full rounded-full" style="width: 88%;"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Typically pins two-person meal pricing within ₹136 of verified market norms across 9,244 spots.
+        </p>
+</div>
+<!-- Metric: Rating Outlook -->
+<div class="bg-surface-container-low rounded-xl p-3 flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-xl">⭐</span>
+<div>
+<span class="font-label-md text-label-md text-on-surface block leading-tight">Rating Classification</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Logistic Regression</span>
+</div>
+</div>
+<div class="text-right">
+<span class="font-tabular-stat text-tabular-stat text-secondary block leading-none">81%</span>
+<span class="font-label-sm text-label-sm text-on-secondary-container">ROC-AUC 0.81</span>
+</div>
+</div>
+<!-- Compact Inline Sparkline Indicator -->
+<div class="w-full bg-surface-container-high rounded-full h-1.5 overflow-hidden flex">
+<div class="bg-secondary h-full rounded-full" style="width: 81%;"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Right 81% of the time discriminating above-benchmark concepts using calibrated probabilities.
+        </p>
+</div>
+</div>
+</section>
+<!-- Card 3: The Data & Methodology -->
+<section class="bg-surface-container-lowest rounded-xl p-4 shadow-sm mb-4">
+<div class="flex items-center gap-2 mb-2">
+<div class="w-7 h-7 rounded-lg bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined text-[18px]">dataset</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">The Data & Methodology</h2>
+</div>
+<div class="bg-surface-container-low rounded-lg p-3 text-on-surface mb-3">
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+        Built on <strong>9,244 Bangalore restaurants</strong> from the canonical open dataset <em>'Zomato Bangalore Restaurants'</em> by Himanshu Poddar (~2019).
+      </p>
+</div>
+<div class="flex items-start gap-2.5 p-3 rounded-lg bg-tertiary-fixed/30 text-on-tertiary-fixed-variant">
+<span class="material-symbols-outlined text-[20px] text-tertiary shrink-0 mt-0.5">shield</span>
+<p class="font-body-sm text-body-sm leading-normal">
+<strong class="font-label-md">Zero post-launch leakage:</strong> We strictly isolate pre-opening variables—micro-location, format, cuisine combination, and intended price bracket. Customer review counts and historical upvotes are completely excluded from predictive inputs.
+      </p>
+</div>
+</section>
+<!-- Card 4: Limitations & Caveats -->
+<section class="bg-surface-container-lowest rounded-xl p-4 shadow-sm mb-5">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">gavel</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Limitations & Caveats</h2>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-outline-variant/40 text-on-surface font-label-sm text-label-sm">
+        Honest AI
+      </span>
+</div>
+<div class="space-y-2">
+<!-- Caveat 1 -->
+<div class="flex items-start gap-2.5 p-2 rounded-lg bg-surface-container-low">
+<span class="text-base shrink-0">⚠️</span>
+<div>
+<span class="font-label-md text-label-md text-on-surface block">Intangibles</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Food taste, service warmth, culinary consistency, and kitchen hygiene cannot be measured by tabular algorithms.
+          </p>
+</div>
+</div>
+<!-- Caveat 2 -->
+<div class="flex items-start gap-2.5 p-2 rounded-lg bg-surface-container-low">
+<span class="text-base shrink-0">⚠️</span>
+<div>
+<span class="font-label-md text-label-md text-on-surface block">Survivor bias</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Defunct or quietly closed outlets are naturally underrepresented in commercial restaurant listings.
+          </p>
+</div>
+</div>
+<!-- Caveat 3 -->
+<div class="flex items-start gap-2.5 p-2 rounded-lg bg-surface-container-low">
+<span class="text-base shrink-0">⚠️</span>
+<div>
+<span class="font-label-md text-label-md text-on-surface block">2019 baseline</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Represents a solid structural operational baseline; does not explicitly reflect post-2022 raw ingredient inflation.
+          </p>
+</div>
+</div>
+<!-- Caveat 4 -->
+<div class="flex items-start gap-2.5 p-2 rounded-lg bg-surface-container-low">
+<span class="text-base shrink-0">⚠️</span>
+<div>
+<span class="font-label-md text-label-md text-on-surface block">Bangalore only</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Hyper-calibrated exclusively to Bangalore micro-markets (Indiranagar, Koramangala, Whitefield, HSR, Jayanagar).
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Interactive Primary Button -->
+<div class="w-full mb-6">
+<button class="w-full h-[52px] rounded-full bg-primary text-on-primary font-label-lg text-label-lg shadow-md hover:opacity-95 active:scale-[0.98] transition-all flex items-center justify-center gap-2" id="runConceptCta">
+<span>Run a Concept Check</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+<!-- Capstone Academic Disclaimer Note -->
+<div class="bg-surface-container-low rounded-xl p-3 text-center mb-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+      SpotCheck is an academic decision-support tool created for the MICA ML Capstone. Not affiliated with Zomato. No sign-up, no private data stored.
+    </p>
+</div>
+</div>
+<script>
+  // Simple micro-interaction for navigating to the predictor
+  const runBtn = document.getElementById('runConceptCta');
+  if (runBtn) {
+    runBtn.addEventListener('click', () => {
+      const predictorTab = document.querySelector('nav a[data-path="predictor"]');
+      if (predictorTab) {
+        predictorTab.click();
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  }
+
+  // Ensure active visual indicator on About tab
+  const aboutTab = document.querySelector('nav a[data-path="about"]');
+  if (aboutTab) {
+    aboutTab.classList.add('text-primary', 'font-bold');
+    aboutTab.classList.remove('text-on-surface-variant');
+  }
+</script><footer class="mt-auto py-space-md text-center"><p class="font-body-sm text-body-sm text-on-surface-variant opacity-75">Not affiliated with Zomato · Estimates, not guarantees</p></footer></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.06)]" data-active-classes="text-primary font-bold"><div class="grid grid-cols-4 items-center h-16"><a class="flex flex-col items-center justify-center h-full min-h-[44px] min-w-[44px] gap-0.5 text-on-surface-variant transition-colors" data-path="predictor" href="#"><span class="material-symbols-outlined text-[22px]">search</span><span class="font-label-sm text-label-sm">Predictor</span></a><a class="flex flex-col items-center justify-center h-full min-h-[44px] min-w-[44px] gap-0.5 text-on-surface-variant transition-colors" data-path="compare" href="#"><span class="material-symbols-outlined text-[22px]">balance</span><span class="font-label-sm text-label-sm">Compare</span></a><a class="flex flex-col items-center justify-center h-full min-h-[44px] min-w-[44px] gap-0.5 text-on-surface-variant transition-colors" data-path="plan" href="#"><span class="material-symbols-outlined text-[22px]">chat</span><span class="font-label-sm text-label-sm">Plan</span></a><a aria-current="page" class="flex flex-col items-center justify-center h-full min-h-[44px] min-w-[44px] gap-0.5 transition-colors text-primary font-bold" data-path="about" href="#"><span class="material-symbols-outlined text-[22px]">info</span><span class="font-label-sm text-label-sm">About</span></a></div></nav></body></html>
